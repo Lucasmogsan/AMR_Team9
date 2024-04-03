@@ -14,14 +14,17 @@ Final project for course 34763 Autonomous Marine Robotics
     ```
 1. Activate your conda environement
     ```bash
+    conda env list
     conda activate AMR_Team9
     ```
 1. Install requirements
     ```bash
-    pip install jupyterlab
+    cd ~/AMR_Team9
+    conda install -c conda-forge jupyterlab=4.0.7 notebook=7.0.6
     pip install -r dev_requirements.txt
     ```
 
 # How to run docker environment
 
 1. 
+
