@@ -73,7 +73,7 @@ docker compose up
 
 Connect to the container:
 ```bash
-docker exec -it amr_project-dev-1 bash
+docker exec -it amr_team9-dev-1 bash
 ```
 
 
@@ -81,18 +81,21 @@ docker exec -it amr_project-dev-1 bash
 
 To give permission to python files in the container use the shell script
 ```bash
-./give_permission.sh
+./shell_scripts/give_permission.sh
 ```
 
+Build and source environment
 ```bash
 catkin build
 source devel/setup.bash
 ```
 
+Launch the main (world, robot, ooi etc)
 ```bash
 roslaunch amr_prj run.launch 
 ```
 
+Use teleop to control (if desired)
 ```bash
 roslaunch uuv_teleop uuv_keyboard_teleop.launch uuv_name:=bluerov2
 roslaunch uuv_teleop uuv_keyboard_teleop.launch uuv_name:=ooi
