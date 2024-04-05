@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="scenario" default="default"/>
+    <arg name="world" default="$(find ts6_bluerov2_perception)/worlds/ocean_waves_$(arg scenario).world"/>
+    <arg name="gui" default="true"/>
+
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="world_name" value="$(arg world)"/>
+        <arg name="gui" value="$(arg gui)"/>
+    </include>
+
+    <param name="robot_description" command="$(find xacro)/xacro --inorder $(find ts6_bluerov2_perception)/urdf/bridge2.urdf"/>
+
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen" args="-param robot_description -urdf -model bridge"/>
+
+    <node name="spawn_marker0" pkg="gazebo_ros" type="spawn_model" respawn="false"
+        args="-sdf -file '$(find ts6_bluerov2_perception)/markers/marker0/model.sdf'
+        -x -18 -y -7 -z -23 -R 0 -P 0 -Y 0 -model Marker0" output="screen"/>
+   
+    <node name="spawn_marker1" pkg="gazebo_ros" type="spawn_model" respawn="false"
+        args="-sdf -file '$(find ts6_bluerov2_perception)/markers/marker1/model.sdf'
+        -x -18 -y 7 -z -23 -R 0 -P 0 -Y 0 -model Marker1" output="screen"/>     
+
+    <node name="spawn_marker2" pkg="gazebo_ros" type="spawn_model" respawn="false"
+        args="-sdf -file '$(find ts6_bluerov2_perception)/markers/marker2/model.sdf'
+        -x 18 -y 7 -z -23 -R 0 -P 0 -Y 0 -model Marker2" output="screen"/>
+
+    <node name="spawn_marker3" pkg="gazebo_ros" type="spawn_model" respawn="false"
+        args="-sdf -file '$(find ts6_bluerov2_perception)/markers/marker3/model.sdf'
+        -x 18 -y -7 -z -23 -R 0 -P 0 -Y 0 -model Marker3" output="screen"/>
+</launch> 

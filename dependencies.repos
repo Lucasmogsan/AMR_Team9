@@ -1,0 +1,15 @@
+repositories:
+
+  bluerov2:
+    type: git
+    url: https://github.com/yaqub93/bluerov2.git 
+
+
+  bluerob_simple_command:
+    type: git
+    url: https://github.com/yaqub93/bluerov_simple_command.git 
+
+
+  uuv_simulator:
+    type: git
+    url: https://github.com/arturmiller/uuv_simulator.git 

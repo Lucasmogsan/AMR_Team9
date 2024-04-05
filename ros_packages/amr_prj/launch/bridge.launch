@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="scenario" default="default"/>
+    <arg name="world" default="$(find amr_prj)/worlds/ocean_waves_$(arg scenario).world"/>
+    <arg name="gui" default="true"/>
+
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="world_name" value="$(arg world)"/>
+        <arg name="gui" value="$(arg gui)"/>
+    </include>
+
+    <param name="robot_description" command="$(find xacro)/xacro --inorder $(find amr_prj)/urdf/bridge2.urdf"/>
+
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen" args="-param robot_description -urdf -model bridge"/>
+
+</launch> 

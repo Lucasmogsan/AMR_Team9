@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>ts1_simple_command</name>
+  <version>0.0.1</version>
+  <description>The ts1_simple_command package</description>
+
+  <maintainer email="yaqpr@dtu.dk">Yaqub Prabowo</maintainer>
+
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>roscpp</build_depend>  <!-- Add this line -->
+  <build_depend>rospy</build_depend>  <!-- Add this line -->
+  <build_depend>std_msgs</build_depend>  <!-- Add any other build dependencies your code needs -->
+  <build_depend>geometry_msgs</build_depend>  <!-- Add any other build dependencies your code needs -->
+  <build_depend>message_generation</build_depend>  <!-- Add this line -->
+
+  <exec_depend>roscpp</exec_depend>  <!-- Add this line -->
+  <exec_depend>rospy</exec_depend>  <!-- Add this line -->
+  <exec_depend>std_msgs</exec_depend>  <!-- Add any other execution dependencies your code needs -->
+  <exec_depend>geometry_msgs</exec_depend>  <!-- Add any other execution dependencies your code needs -->
+  <exec_depend>message_runtime</exec_depend>  <!-- Add this line -->
+
+  <!-- Your other package information goes here -->
+
+</package>

@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="amr_prj" type="move_target.py" name="move_target" output="screen">
+  </node>
+</launch>

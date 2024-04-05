@@ -1,10 +1,9 @@
 # Sensor-based underwater tracking of marine object
 Final project for course 34763 Autonomous Marine Robotics
 
-
 # Development
 
-## Getting Started
+## Git (Downloading and contributing)
 
 1. Clone the repository
     ```bash
@@ -34,25 +33,68 @@ Final project for course 34763 Autonomous Marine Robotics
 1. To merge to main go to the [GitHub repository](https://github.com/Lucasmogsan/AMR_Team9.git)
 
 
-# Conda environment for local tests
+## Conda environment (Local tests)
 
 1. Create your conda virtual environment (only TBD the first time)
     ```bash
-    conda create --name AMR_Team9 python=3.10
+    conda create --name amr_project python=3.10
     ```
 1. Activate your conda environement
     ```bash
     conda env list
-    conda activate AMR_Team9
+    conda activate amr_project
     ```
 1. Install requirements
     ```bash
-    cd ~/AMR_Team9
+    cd ~/amr_project
     conda install -c conda-forge jupyterlab=4.0.7 notebook=7.0.6
     pip install -r dev_requirements.txt
     ```
 
-# How to run docker environment
+## Docker (How to run docker environment)
 
-1. 
+Install docker and docker compose
+
+Docker:
+https://docs.docker.com/engine/install/
+
+Docker compose:
+https://docs.docker.com/compose/install/
+
+Build the image:
+```bash
+docker compose build
+```
+
+Run the container:
+```bash
+docker compose up
+```
+
+Connect to the container:
+```bash
+docker exec -it amr_project-dev-1 bash
+```
+
+
+## ROS commands
+
+To give permission to python files in the container use the shell script
+```bash
+./give_permission.sh
+```
+
+```bash
+catkin build
+source devel/setup.bash
+```
+
+```bash
+roslaunch amr_prj run.launch 
+```
+
+```bash
+roslaunch uuv_teleop uuv_keyboard_teleop.launch uuv_name:=bluerov2
+roslaunch uuv_teleop uuv_keyboard_teleop.launch uuv_name:=ooi
+```
 
