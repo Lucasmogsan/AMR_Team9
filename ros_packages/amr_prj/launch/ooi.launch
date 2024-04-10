@@ -22,6 +22,8 @@
   <arg name="use_ned_frame" default="true"/>
 
   <arg name="gazebo_tf" default="true"/>
+  <!-- Movement control (python script) -->
+  <arg name="target_move_mode" default="1"/>  <!-- 0: simple, 1: circle, 2: random -->
 
   <!-- Mode to open different robot configurations as set the in file
   nomenclature standard for the files in /robots
@@ -78,6 +80,7 @@
   </group>
 
   <node pkg="amr_prj" type="move_target.py" name="move_target" output="screen">
+    <param name="target_move_mode" value="$(arg target_move_mode)"/>
   </node>
 
 </launch>

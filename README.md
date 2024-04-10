@@ -68,7 +68,7 @@ docker compose build
 
 Run the container:
 ```bash
-docker compose up
+docker compose up dev
 ```
 
 Connect to the container:
