@@ -11,8 +11,8 @@ def ooi_simple_move_publisher():
     rospy.init_node('simple_movement', anonymous=True)
 
     # Get parameters from ROS parameter server
-    period = rospy.get_param('~period', 6.0)
-    speed = rospy.get_param('~speed', 0.5)
+    period = rospy.get_param('~period', 10.0)
+    speed = rospy.get_param('~speed', 0.1)
 
     pub = rospy.Publisher('ooi/cmd_vel', Twist, queue_size=10)
 
