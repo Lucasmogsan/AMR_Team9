@@ -68,7 +68,7 @@ docker compose build
 
 Run the container:
 ```bash
-docker compose up
+docker compose up dev
 ```
 
 Connect to the container:
@@ -100,4 +100,3 @@ Use teleop to control (if desired)
 roslaunch uuv_teleop uuv_keyboard_teleop.launch uuv_name:=bluerov2
 roslaunch uuv_teleop uuv_keyboard_teleop.launch uuv_name:=ooi
 ```
-

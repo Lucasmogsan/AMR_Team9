@@ -1,0 +1,4 @@
+<launch>
+    <node pkg="amr_prj" name="image_analyser" type="image_analyser.py" output="screen">
+    </node>
+</launch>
