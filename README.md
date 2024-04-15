@@ -42,6 +42,12 @@ Final project for course 34763 Autonomous Marine Robotics
 
 ## Submodules
 
+Clone the repo with submodules:
+```bash
+git clone --recursive git@github.com:Lucasmogsan/AMR_Team9.git
+```
+
+Alternatively clone the repo and then get the submodules afterwards:
 ```bash
 git submodule update --init --recursive
 ```
