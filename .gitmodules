@@ -1,0 +1,3 @@
+[submodule "ros_packages/obstacle_detector"]
+	path = ros_packages/obstacle_detector
+	url = git@github.com:tysik/obstacle_detector.git

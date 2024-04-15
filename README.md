@@ -3,6 +3,13 @@ Final project for course 34763 Autonomous Marine Robotics
 
 # Development
 
+# Notes:
+
+- Object 
+- Object detected by camera
+- Sonar used to defin distance
+- 
+
 ## Git (Downloading and contributing)
 
 1. Clone the repository
@@ -31,6 +38,20 @@ Final project for course 34763 Autonomous Marine Robotics
     git push origin new_branch
     ```
 1. To merge to main go to the [GitHub repository](https://github.com/Lucasmogsan/AMR_Team9.git)
+
+
+## Submodules
+
+```bash
+git submodule update --init --recursive
+```
+
+The main repo has references to the submodules. If these submodules are modified, then the main repo may need to update these references in order to pull the latest data.
+```bash
+git submodule update --remote
+```
+
+This modifies the references in the main repo, and these changes needs to be comitted and pushed.
 
 
 ## Conda environment (Local tests)
