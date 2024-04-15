@@ -1,0 +1,4 @@
+<launch>
+    <node pkg="amr_prj" name="sonar_analyser" type="sonar_analyser.py" output="screen">
+    </node>
+</launch>
