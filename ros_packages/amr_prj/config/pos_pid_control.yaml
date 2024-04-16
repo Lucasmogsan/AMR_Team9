@@ -1,0 +1,10 @@
+position_control/pos_p: 1
+position_control/pos_i: 0.1
+position_control/pos_d: 0.001
+position_control/pos_sat: 3.0
+
+position_control/rot_p: 1.5    # Reduced slightly from 2
+position_control/rot_i: 0 #0.005  # Halved from 0.01 to reduce integral windup
+position_control/rot_d: 0.02   # Increased for more damping
+position_control/rot_sat: 20   # Unchanged
+
