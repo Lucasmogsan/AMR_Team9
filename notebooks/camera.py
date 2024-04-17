@@ -75,13 +75,14 @@ class CircleDetector:
         return max_circle[0], max_circle[1], max_circle[2]  # x, y, radius
 
 
-def process_frame(frame, detector):
-    circles = detector.find_circles(frame)
-    if circles is not None:
-        res = detector.recognize_red(frame)
-        counts = detector.count_red_pixels(res, circles)
-        center_x, center_y, radius = detector.find_most_red_circle(counts, circles)
-        print(center_x, center_y, radius)
+    def process_frame(frame, detector):
+        circles = detector.find_circles(frame)
+        if circles is not None:
+            res = detector.recognize_red(frame)
+            counts = detector.count_red_pixels(res, circles)
+            center_x, center_y, radius = detector.find_most_red_circle(counts, circles)
+            print(center_x, center_y, radius)
+            return center_x, center_y, radius
 
 def main(source='red_ball_img.jpg'):
     detector = CircleDetector()
@@ -100,7 +101,7 @@ def main(source='red_ball_img.jpg'):
         if frame is None:
             print("Failed to load image.")
             sys.exit(1)
-        process_frame(frame, detector)
+        detector.process_frame(frame, detector)
         cv2.waitKey(0)  # Wait until a key is pressed
         cv2.destroyAllWindows()
         return
@@ -110,7 +111,7 @@ def main(source='red_ball_img.jpg'):
         ret, frame = cap.read()
         if not ret:
             break
-        process_frame(frame, detector)
+        detector.process_frame(frame, detector)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
