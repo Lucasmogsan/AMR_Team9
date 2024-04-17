@@ -1,9 +1,9 @@
 # ROS distribution to use
 ARG ROS_DISTRO=noetic
 
-###############################################################################################
+##############################################################################################
 # Base Image for #
-###############################################################################################
+##############################################################################################
 
 FROM osrf/ros:${ROS_DISTRO}-desktop-full as base
 ENV ROS_DISTRO=${ROS_DISTRO}
@@ -101,7 +101,13 @@ ARG UID=1000
 ARG GID=${UID}
 
 # Install extra tools for development
-RUN apt-get update && apt-get install -y --no-install-recommends gdb gdbserver nano
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gdb \
+    gdbserver \
+    nano \
+    python3-matplotlib \
+    python3-tk \
+    x11-apps
 
 
 # RUN git clone https://gitlab.gbar.dtu.dk/dtu-asl/courses/34763-autonomous-marine-robotics && \
