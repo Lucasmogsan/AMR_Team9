@@ -127,3 +127,9 @@ Use teleop to control (if desired)
 roslaunch uuv_teleop uuv_keyboard_teleop.launch uuv_name:=bluerov2
 roslaunch uuv_teleop uuv_keyboard_teleop.launch uuv_name:=ooi
 ```
+
+Play bag files:
+```bash
+rqt_bag >>path-to-rosbag.bag<<
+rosbag play >>path-to-rosbag.bag<<
+```
