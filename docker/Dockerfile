@@ -28,6 +28,7 @@ RUN apt-get update && apt-get install -y \
   ros-${ROS_DISTRO}-geographic-msgs \
   ros-${ROS_DISTRO}-costmap-2d \
   ros-${ROS_DISTRO}-octomap-msgs \
+  ros-${ROS_DISTRO}-genmypy \
   ros-${ROS_DISTRO}-cv-bridge \
   ros-${ROS_DISTRO}-vision-opencv \
   ros-${ROS_DISTRO}-mavros && \

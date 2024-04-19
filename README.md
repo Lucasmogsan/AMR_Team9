@@ -129,7 +129,16 @@ roslaunch uuv_teleop uuv_keyboard_teleop.launch uuv_name:=ooi
 ```
 
 Play bag files:
+
+`e.g. move them to the ros_packages folder so they are mounted to the container (though not the ideal way of doing this)`
 ```bash
+roscore
 rqt_bag >>path-to-rosbag.bag<<
 rosbag play >>path-to-rosbag.bag<<
 ```
+
+- Image file is on topic `/oak_d_lite/rgb/image_color/h265/`
+    - msg type: [`sensor_msgs/CompressedImage`](https://docs.ros.org/en/melodic/api/sensor_msgs/html/msg/CompressedImage.html)
+
+- Sonar data is on topic `/oculus/raw_data`
+    - msg type: custom [`apl_msg/RawData`](https://gitlab.com/apl-ocean-engineering/apl_msgs/-/tree/main/msg?ref_type=heads)
