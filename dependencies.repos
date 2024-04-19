@@ -5,7 +5,7 @@ repositories:
     url: https://github.com/yaqub93/bluerov2.git 
 
 
-  bluerob_simple_command:
+  bluerov_simple_command:
     type: git
     url: https://github.com/yaqub93/bluerov_simple_command.git 
 
@@ -13,3 +13,7 @@ repositories:
   uuv_simulator:
     type: git
     url: https://github.com/arturmiller/uuv_simulator.git 
+
+  apl_msgs:
+    type: git
+    url: https://gitlab.com/apl-ocean-engineering/apl_msgs.git
