@@ -6,7 +6,7 @@ class CircleDetector:
     def __init__(self, dp=1, min_dist=20, param1=50, param2=25, min_radius=25, max_radius=400,
                  hsv_lower_red1=(0, 50, 50), hsv_upper_red1=(10, 255, 255),
                  hsv_lower_red2=(170, 50, 50), hsv_upper_red2=(180, 255, 255),
-                 blur_ksize=(5, 5), blur_sigma=0):
+                 blur_ksize=(5, 5), blur_sigma=2):
         
         # TODO: Assess min, max radius and min distance
         # TODO: Optimize hsv vlaues for OOI
@@ -85,6 +85,9 @@ class CircleDetector:
             self.tracking = True
             self.min_radius = int(self.tracked_circle[2]*0.5)
             self.max_radius = int(self.tracked_circle[2]*2)
+            if(self.max_radius>400):
+                self.min_radius=100
+                self.max_radius=400
         
     def circle_in_field_of_regard(self, ref_circle, circles):
         # Get the dimensions of the field of regard
@@ -175,12 +178,18 @@ class CircleDetector:
                 self.trackfailcount=0
                 self.min_radius = int(self.tracked_circle[2]*0.5)
                 self.max_radius = int(self.tracked_circle[2]*2)
+                if(self.max_radius>400):
+                    self.min_radius=100
+                    self.max_radius=400
             else:
                 self.trackfailcount += 1
                 if self.trackfailcount>10:
                     self.tracking = False
                     self.min_radius = int(self.tracked_circle[2]*0.25)
                     self.max_radius = int(self.tracked_circle[2]*4)
+                    if(self.max_radius>400):
+                        self.min_radius=25
+                        self.max_radius=400
                     self.tracked_circle=[]
         else:
             self.trackfailcount += 1
@@ -188,6 +197,9 @@ class CircleDetector:
                 self.tracking = False
                 self.min_radius = int(self.tracked_circle[2]*0.25)
                 self.max_radius = int(self.tracked_circle[2]*4)
+                if(self.max_radius>400):
+                    self.min_radius=25
+                    self.max_radius=400
                 self.tracked_circle=[]
 
     def get_circle(self, frame):
