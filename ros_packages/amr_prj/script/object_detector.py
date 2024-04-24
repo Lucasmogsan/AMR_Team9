@@ -3,7 +3,7 @@ import numpy as np
 import sys
 
 class CircleDetector:
-    def __init__(self, dp=1, min_dist=20, param1=50, param2=70, min_radius=10, max_radius=200,
+    def __init__(self, dp=1, min_dist=20, param1=50, param2=70, min_radius=50, max_radius=500,
                  hsv_lower_red1=(0, 50, 50), hsv_upper_red1=(10, 255, 255),
                  hsv_lower_red2=(170, 50, 50), hsv_upper_red2=(180, 255, 255),
                  blur_ksize=(5, 5), blur_sigma=0):
@@ -40,11 +40,11 @@ class CircleDetector:
         circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, self.dp, self.min_dist, param1=self.param1, param2=self.param2, minRadius=self.min_radius, maxRadius=self.max_radius)
         if circles is not None:
             circles = np.uint16(np.around(circles))
-            for i in circles[0, :]:
+            #for i in circles[0, :]:
                 # Draw the outer circle
-                cv2.circle(frame, (i[0], i[1]), i[2], (0, 255, 0), 2)
+            #    cv2.circle(frame, (i[0], i[1]), i[2], (0, 255, 0), 2)
                 # Draw the center of the circle
-                cv2.circle(frame, (i[0], i[1]), 2, (255, 0, 0), 3)
+            #    cv2.circle(frame, (i[0], i[1]), 2, (255, 0, 0), 3)
         return circles
 
     def recognize_red(self, frame):
@@ -202,6 +202,22 @@ def main():
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
+    frame = cv2.imread("C:\\Users\\s194149\\Downloads\\red_ball_img.png")
+  
+    #detector.recognize_OOI(frame)
+    circle = detector.get_circle(frame)
+    
+    if not (len(circle) == 0):
+        x, y, r = circle
+        print(x,y,r)
+        cv2.circle(frame, (x, y), r, (0, 255, 0), 2)  # Draw the circle boundary in green
+        cv2.circle(frame, (x, y), 2, (0, 0, 255), 3)  # Draw the center of the circle in red
+        cv2.imshow("Processed", frame)
+        cv2.waitKey(0)    
+    else :
+        print("No circle found")
+        
+            
     # while True:
     #     print("Recognizing OOI")
     #     # Read frame
