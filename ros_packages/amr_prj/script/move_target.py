@@ -106,7 +106,7 @@ if __name__ == '__main__':
     try:
         # Get mode parameter from ROS parameter server
         #target_move_mode = rospy.get_param('/move_target/target_move_mode', '0')
-        target_move_mode = 0
+        target_move_mode = '0'
         # Call the appropriate function based on the mode parameter
         if target_move_mode == '0':
             ooi_simple_move_publisher()
