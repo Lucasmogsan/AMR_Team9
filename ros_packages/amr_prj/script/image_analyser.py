@@ -40,17 +40,26 @@ class ImageAnalyser:
             rospy.logerr("CvBridge Error: {0}".format(e))
             return
 
+        # # Process the image with the CircleDetector
+        # max_circle = self.detector.recognize_OOI(cv_image)
+        # if max_circle is not None:
+        #     tracked_circle = detector.get_circle()
+        #     detector.track_OOI(max_circle,frame)
+        # rospy.loginfo(circles)
+        # for (x, y, r) in circles:
+        #     cv2.circle(cv_image, (x, y), r, (0, 255, 0), 2)
+        #     cv2.circle(cv_image, (x, y), 2, (0, 0, 255), 3)
+        #     circle_msg = Circle(x=x, y=y, radius=r)
+        #     self.pub2.publish(circle_msg)  # Publish each circle's data
+
         # Process the image with the CircleDetector
-        max_circle = self.detector.recognize_OOI(cv_image)
-        if max_circle is not None:
-            tracked_circle = detector.get_circle()
-            detector.track_OOI(max_circle,frame)
-        rospy.loginfo(circles)
-        for (x, y, r) in circles:
-            cv2.circle(cv_image, (x, y), r, (0, 255, 0), 2)
-            cv2.circle(cv_image, (x, y), 2, (0, 0, 255), 3)
+
+        circle = self.detector.get_circle(cv_image)
+        if circle is not None:
+            rospy.loginfo(circle)
+            x,y,r = circle
             circle_msg = Circle(x=x, y=y, radius=r)
-            self.pub2.publish(circle_msg)  # Publish each circle's data
+            self.pub2.publish(circle_msg)  # Publish circle's data
 
         # Convert the processed image back to a ROS image message
         try:

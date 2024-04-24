@@ -32,6 +32,7 @@ class CircleDetector:
         # Tracking
         self.tracked_circle = []
         self.tracking = False
+        self.trackfailcount=0
 
     def find_circles(self, frame):
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -75,14 +76,13 @@ class CircleDetector:
         max_circle = circles[0, max_index]
         return max_circle[0], max_circle[1], max_circle[2]  # x, y, radius
 
-
     def recognize_OOI(self, frame):
         circles = self.find_circles(frame)
         if circles is not None:
             res = self.recognize_red(frame)
             counts = self.count_red_pixels(res, circles)
-            center_x, center_y, radius = self.find_most_red_circle(counts, circles)
-            return center_x, center_y, radius
+            self.tracked_circle = self.find_most_red_circle(counts, circles)
+            self.tracking = True
         
     def circle_in_field_of_regard(self, ref_circle, circles):
         # Get the dimensions of the field of regard
@@ -116,56 +116,78 @@ class CircleDetector:
         #cv2.waitKey(0)
         return goodcircles
     
-    def get_circle(self):
-        if self.tracking = True:
-            self.track_OOI()
-        return self.tracked_circle
-    
-    def track_OOI(self, ref_circle, frame):
-        # # Create a VideoCapture object
-        # cap = cv2.VideoCapture(0)
+    # def track_OOI(self, ref_circle, frame):
+    #     # # Create a VideoCapture object
+    #     # cap = cv2.VideoCapture(0)
 
-        lastcircle = ref_circle
-        failcount = 0
-        max_circle = None
+    #     lastcircle = ref_circle
+    #     failcount = 0
+    #     max_circle = None
 
-        while True:
-            # Capture frame-by-frame
-            max_circle = None
-            temp_frame = frame.copy()
-            circles=self.find_circles(temp_frame)
+    #     while True:
+    #         # Capture frame-by-frame
+    #         max_circle = None
+    #         temp_frame = frame.copy()
+    #         circles=self.find_circles(temp_frame)
 
-            if circles is not None:
-                print(circles)
-                goodcircles = self.circle_in_field_of_regard(lastcircle, circles)
-                if goodcircles is not None:
-                    #print("if")
-                    res = self.recognize_red(frame)
-                    counts = self.count_red_pixels(res, goodcircles)
-                    max_circle = self.find_most_red_circle(counts, goodcircles)           
-                    #print('\n')
-                    lastcircle= max_circle
-                    failcount = 0
-                    self.tracked_circle = lastcircle
-                else:
-                    #print("else")
-                    failcount += 1
-                    print(failcount)
-                    if failcount>10:
-                        break
-            else:
-                failcount += 1
-                print(failcount)
-                if failcount>10:
-                    break
+    #         if circles is not None:
+    #             print(circles)
+    #             goodcircles = self.circle_in_field_of_regard(lastcircle, circles)
+    #             if goodcircles is not None:
+    #                 #print("if")
+    #                 res = self.recognize_red(frame)
+    #                 counts = self.count_red_pixels(res, goodcircles)
+    #                 max_circle = self.find_most_red_circle(counts, goodcircles)           
+    #                 #print('\n')
+    #                 lastcircle= max_circle
+    #                 failcount = 0
+    #                 self.tracked_circle = lastcircle
+    #             else:
+    #                 #print("else")
+    #                 failcount += 1
+    #                 print(failcount)
+    #                 if failcount>10:
+    #                     break
+    #         else:
+    #             failcount += 1
+    #             print(failcount)
+    #             if failcount>10:
+    #                 break
             
-            #print(failcount)
-            print(max_circle)
+    #         #print(failcount)
+    #         print(max_circle)
 
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
+    #         if cv2.waitKey(1) & 0xFF == ord('q'):
+    #             break
 
+    def track_OOI(self, frame):
 
+        circles=self.find_circles(frame)
+
+        if circles is not None:
+            goodcircles = self.circle_in_field_of_regard(self.tracked_circle, circles)
+            if goodcircles is not None:
+                res = self.recognize_red(frame)
+                counts = self.count_red_pixels(res, goodcircles)
+                self.tracked_circle = self.find_most_red_circle(counts, goodcircles)           
+                self.trackfailcount=0
+            else:
+                self.trackfailcount += 1
+                if self.trackfailcount>10:
+                    self.tracking = False
+                    self.tracked_circle=[]
+        else:
+            self.trackfailcount += 1
+            if self.trackfailcount>10:
+                self.tracking = False
+                self.tracked_circle=[]
+
+    def get_circle(self, frame):
+        if self.tracking == True:
+            self.track_OOI(frame)
+        else:
+            self.recognize_OOI(frame)
+        return self.tracked_circle
 
 
 def main():
@@ -180,23 +202,23 @@ def main():
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
-    while True:
-        print("Recognizing OOI")
-        # Read frame
-        ret, frame = cap.read()
-        if not ret:
-            print("Error: Cannot receive frame (stream end?). Exiting ...")
-            break
-        max_circle = detector.recognize_OOI(frame)
+    # while True:
+    #     print("Recognizing OOI")
+    #     # Read frame
+    #     ret, frame = cap.read()
+    #     if not ret:
+    #         print("Error: Cannot receive frame (stream end?). Exiting ...")
+    #         break
+    #     max_circle = detector.recognize_OOI(frame)
         
-        print(max_circle)
-        if max_circle is not None:
-            print("Tracking OOI")
-            detector.track_OOI(max_circle, frame)
+    #     print(max_circle)
+    #     if max_circle is not None:
+    #         print("Tracking OOI")
+    #         detector.track_OOI(max_circle, frame)
 
-        # Press 'q' to close the window
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+    #     # Press 'q' to close the window
+    #     if cv2.waitKey(1) & 0xFF == ord('q'):
+    #         break
 
     # When everything done, release the capture
     cap.release()
