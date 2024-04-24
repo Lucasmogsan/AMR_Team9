@@ -3,7 +3,7 @@ import numpy as np
 import sys
 
 class CircleDetector:
-    def __init__(self, dp=1, min_dist=20, param1=50, param2=70, min_radius=240, max_radius=480,
+    def __init__(self, dp=1, min_dist=20, param1=50, param2=70, min_radius=10, max_radius=200,
                  hsv_lower_red1=(0, 50, 50), hsv_upper_red1=(10, 255, 255),
                  hsv_lower_red2=(170, 50, 50), hsv_upper_red2=(180, 255, 255),
                  blur_ksize=(5, 5), blur_sigma=0):
@@ -75,54 +75,131 @@ class CircleDetector:
         return max_circle[0], max_circle[1], max_circle[2]  # x, y, radius
 
 
-    def process_frame(frame, detector):
-        circles = detector.find_circles(frame)
+    def recognize_OOI(self, frame):
+        circles = self.find_circles(frame)
         if circles is not None:
-            res = detector.recognize_red(frame)
-            counts = detector.count_red_pixels(res, circles)
-            center_x, center_y, radius = detector.find_most_red_circle(counts, circles)
+            res = self.recognize_red(frame)
+            counts = self.count_red_pixels(res, circles)
+            center_x, center_y, radius = self.find_most_red_circle(counts, circles)
             print(center_x, center_y, radius)
             return center_x, center_y, radius
+        
+    def circle_in_field_of_regard(self, ref_circle, circles):
+        # Get the dimensions of the field of regard
+        maxdist=20
 
-def main(source='red_ball_img.jpg'):
-    detector = CircleDetector()
+        # Get the coordinates of the ref_circle
+        xref = ref_circle[0]
+        yref = ref_circle[1]
 
-    if source == 'camera':
-        # Use camera
-        cap = cv2.VideoCapture(0)  # Default camera
-        cap.set(3, 640)  # Width
-        cap.set(4, 480)  # Height
-    elif source.endswith('.mp4') or source.endswith('.avi'):
-        # Use video file
-        cap = cv2.VideoCapture(source)
-    else:
-        # Use image file
-        frame = cv2.imread(source)
-        if frame is None:
-            print("Failed to load image.")
-            sys.exit(1)
-        detector.process_frame(frame, detector)
-        cv2.waitKey(0)  # Wait until a key is pressed
-        cv2.destroyAllWindows()
+        goodcircles = np.copy(circles)
+
+        #print(circles)
+        i=0
+        delindex = []
+
+        for circle in circles[0, :]:
+            x = circle[0]
+            y = circle[1]
+            if (xref-x)**2+(yref-y)**2>maxdist**2:
+                #print((xref-x)**2+(yref-y)**2)
+                delindex.append(i)
+            i+=1
+
+        goodcircles = np.delete(goodcircles, delindex, axis=1)
+
+        if(goodcircles.size==0):
+            return None
+
+        #print(goodcircles)
+        #print(circles)
+        #cv2.waitKey(0)
+        return goodcircles
+    
+    def track_OOI(self, ref_circle, frame):
+        # # Create a VideoCapture object
+        # cap = cv2.VideoCapture(0)
+
+        lastcircle = ref_circle
+        failcount = 0
+        max_circle = None
+
+        while True:
+            # Capture frame-by-frame
+            max_circle = None
+            temp_frame = frame.copy()
+            circles=self.find_circles(temp_frame)
+
+            if circles is not None:
+                print(circles)
+                goodcircles = self.circle_in_field_of_regard(lastcircle, circles)
+                if goodcircles is not None:
+                    #print("if")
+                    res = self.recognize_red(frame)
+                    counts = self.count_red_pixels(res, goodcircles)
+                    max_circle = self.find_most_red_circle(counts, goodcircles)           
+                    #print('\n')
+                    lastcircle= max_circle
+                    failcount = 0
+                else:
+                    #print("else")
+                    failcount += 1
+                    print(failcount)
+                    if failcount>10:
+                        break
+            else:
+                failcount += 1
+                print(failcount)
+                if failcount>10:
+                    break
+            
+            #print(failcount)
+            print(max_circle)
+
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+
+
+
+
+def main():
+    # Initialize camera
+    cap = cv2.VideoCapture(0)  # '0' is typically the default camera
+    if not cap.isOpened():
+        print("Error: Camera could not be accessed.")
         return
+    
+    detector = CircleDetector()
+    # Set frame dimensions (optional)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
-    # Video or camera input
     while True:
+        print("Recognizing OOI")
+        # Read frame
         ret, frame = cap.read()
         if not ret:
+            print("Error: Cannot receive frame (stream end?). Exiting ...")
             break
-        detector.process_frame(frame, detector)
+        max_circle = detector.recognize_OOI(frame)
+        
+        print(max_circle)
+        if max_circle is not None:
+            print("Tracking OOI")
+            detector.track_OOI(max_circle, frame)
 
+        # Press 'q' to close the window
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
+    # When everything done, release the capture
     cap.release()
     cv2.destroyAllWindows()
-    cv2.waitKey(1)
+
 
 if __name__ == "__main__":
     try:
         main()
-    except Exception as e:  
+    except Exception as e:
         cv2.destroyAllWindows()
         cv2.waitKey(1)

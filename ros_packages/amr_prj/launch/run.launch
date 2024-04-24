@@ -72,5 +72,7 @@
     
     <!-- Start RViz  -->
     <node name="rviz" pkg="rviz" type="rviz" output="screen" args="-d $(find amr_prj)/rviz/bluerov2_perception.rviz"/>
-    
+    <!-- Start Image Analyser  -->
+    <!-- <node name="image_analyser" pkg="amr_prj" type="image_analyser.py" output="screen" /> -->
+
 </launch>
