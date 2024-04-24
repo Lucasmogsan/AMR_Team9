@@ -30,8 +30,6 @@ class SonarAnalyser:
 
         # LASERSCAN PROCESSING TO BE DONE HERE:
 
-        ...
-
         # Find the closest object
         min_distance = np.min(msg.ranges)
 

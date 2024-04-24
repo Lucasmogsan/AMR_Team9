@@ -1,0 +1,4 @@
+<launch>
+    <node pkg="amr_prj" name="sensor_fusion" type="kalman_fusion.py" output="screen">
+    </node>
+</launch>

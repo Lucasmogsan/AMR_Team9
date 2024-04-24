@@ -40,7 +40,9 @@ RUN apt-get update && apt-get install -y \
   libarmadillo-dev && \
   rm -rf /var/lib/apt/lists/*
 
-RUN python3 -m pip install --user scipy
+RUN python3 -m pip install --user \
+  scipy \
+  filterpy
 
 # Create Catkin workspace 
 RUN mkdir -p /underlay_ws/src 
