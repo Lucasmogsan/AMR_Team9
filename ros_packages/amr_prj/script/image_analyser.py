@@ -55,12 +55,13 @@ class ImageAnalyser:
         # Process the image with the CircleDetector
 
         circle = self.detector.get_circle(cv_image)
-        if circle is not None:
-            rospy.loginfo(circle)
-            x,y,r = circle
+        rospy.loginfo(circle)
+        if not (len(circle) == 0):
+            x, y, r = circle
+            cv2.circle(cv_image, (x, y), r, (0, 255, 0), 2)  # Draw the circle boundary in green
+            cv2.circle(cv_image, (x, y), 2, (0, 0, 255), 3)  # Draw the center of the circle in red
             circle_msg = Circle(x=x, y=y, radius=r)
-            self.pub2.publish(circle_msg)  # Publish circle's data
-
+        self.pub2.publish(circle_msg)  # Publish circle's data
         # Convert the processed image back to a ROS image message
         try:
             img_msg = self.bridge.cv2_to_imgmsg(cv_image, "bgr8")

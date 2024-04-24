@@ -32,9 +32,25 @@ class TrackControlNode:
                                    self.pos_pid_config['position_control/rot_sat'])
 
         self.position_subscriber_ooi = rospy.Subscriber('/ooi/pose_gt', Odometry, self.ooi_position_callback)
-        self.position_subscriber_bluerov2 = rospy.Subscriber('/bluerov2/pose_gt', Odometry, self.bluerov2_position_callback)
+        self.subscriber_bluerov2_gt = rospy.Subscriber('/bluerov2/pose_gt', Odometry, self.bluerov2_position_callback)
+        self.subscriber_bluerov2_measured_imu = rospy.Subscriber('/bluerov2/imu', Odometry, self.bluerov2_measured_callback)
+
         self.velocity_publisher = rospy.Publisher('bluerov2/cmd_vel', Twist, queue_size=10)
         rospy.Timer(rospy.Duration(0.1), self.update_control)
+
+        self.cameraFOV = 60;
+        self.imageWidth = 640;
+
+
+    def ooi_position_callback(self, msg):
+        self.current_ooi_position = msg.pose.pose.position
+
+    def bluerov2_position_callback(self, msg):
+        self.gt_bluerov2_position = msg.pose.pose.position
+        self.gt_bluerov2_orientation = msg.pose.pose.orientation
+    
+    def bluerov2_measured_callback(self,msg):
+        self.bluerov2_measured_orientation = msg.orientation
 
     def log_data(self, actual_distance, surge_control_signal, yaw_error, yaw_control_signal):
         error = self.desired_distance - actual_distance
@@ -104,20 +120,13 @@ class TrackControlNode:
     def on_shutdown(self):
         self.plot_data()
 
-    def ooi_position_callback(self, msg):
-        self.current_ooi_position = msg.pose.pose.position
-
-    def bluerov2_position_callback(self, msg):
-        self.current_bluerov2_position = msg.pose.pose.position
-        self.current_bluerov2_orientation = msg.pose.pose.orientation
-
     def get_rov_heading(self):
         # Assuming self.current_bluerov2_orientation is set to a geometry_msgs/Quaternion
         quaternion = (
-            self.current_bluerov2_orientation.x,
-            self.current_bluerov2_orientation.y,
-            self.current_bluerov2_orientation.z,
-            self.current_bluerov2_orientation.w
+            self.bluerov2_measured_orientation.x,
+            self.bluerov2_measured_orientation.y,
+            self.bluerov2_measured_orientation.z,
+            self.bluerov2_measured_orientation.w
         )
         # Convert quaternion to Euler angles (roll, pitch, yaw)
         euler = tf.transformations.euler_from_quaternion(quaternion)
@@ -133,8 +142,8 @@ class TrackControlNode:
         else:
             rospy.logerr('Position PID config file not found')
 
-    def calculate_actual_distance(self): # TODO: Sonar distance implementation / Camera dist
-        # Extract coordinates from ROS Pose messages | TODO: Change when sonar and image are working
+    def calculate_actual_distance(self): 
+        # Extract coordinates from ROS Pose messages 
         ooi_x = self.current_ooi_position.x
         ooi_y = self.current_ooi_position.y
         ooi_z = self.current_ooi_position.z
@@ -152,13 +161,16 @@ class TrackControlNode:
         dx = self.current_ooi_position.x - self.current_bluerov2_position.x
         
         # Bearing to the OOI from the ROV's current position
-        bearing_to_ooi = np.arctan2(dy, dx)
+        heading_to_ooi = np.arctan2(dy, dx)
+
+    
+        yaw_detection = PIXEL_X_COORDINATE * (self.cameraFOV / self.imageWidth);
         
         # Get the ROV's current heading (yaw) from quaternion
-        rov_heading = self.get_rov_heading()
+        yaw_current = self.get_rov_heading()
 
         # Calculate yaw error
-        yaw_error = (bearing_to_ooi - rov_heading + np.pi) % (2 * np.pi) - np.pi
+        yaw_error = (yaw_detection - yaw-current + np.pi) % (2 * np.pi) - np.pi
 
         return yaw_error
 
