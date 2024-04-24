@@ -3,7 +3,7 @@ import numpy as np
 import sys
 
 class CircleDetector:
-    def __init__(self, dp=1, min_dist=20, param1=50, param2=70, min_radius=50, max_radius=500,
+    def __init__(self, dp=1, min_dist=20, param1=50, param2=25, min_radius=25, max_radius=400,
                  hsv_lower_red1=(0, 50, 50), hsv_upper_red1=(10, 255, 255),
                  hsv_lower_red2=(170, 50, 50), hsv_upper_red2=(180, 255, 255),
                  blur_ksize=(5, 5), blur_sigma=0):
@@ -83,10 +83,12 @@ class CircleDetector:
             counts = self.count_red_pixels(res, circles)
             self.tracked_circle = self.find_most_red_circle(counts, circles)
             self.tracking = True
+            self.min_radius = int(self.tracked_circle[2]*0.5)
+            self.max_radius = int(self.tracked_circle[2]*2)
         
     def circle_in_field_of_regard(self, ref_circle, circles):
         # Get the dimensions of the field of regard
-        maxdist=20
+        maxdist=ref_circle[2]*2.5
 
         # Get the coordinates of the ref_circle
         xref = ref_circle[0]
@@ -171,15 +173,21 @@ class CircleDetector:
                 counts = self.count_red_pixels(res, goodcircles)
                 self.tracked_circle = self.find_most_red_circle(counts, goodcircles)           
                 self.trackfailcount=0
+                self.min_radius = int(self.tracked_circle[2]*0.5)
+                self.max_radius = int(self.tracked_circle[2]*2)
             else:
                 self.trackfailcount += 1
                 if self.trackfailcount>10:
                     self.tracking = False
+                    self.min_radius = int(self.tracked_circle[2]*0.25)
+                    self.max_radius = int(self.tracked_circle[2]*4)
                     self.tracked_circle=[]
         else:
             self.trackfailcount += 1
             if self.trackfailcount>10:
                 self.tracking = False
+                self.min_radius = int(self.tracked_circle[2]*0.25)
+                self.max_radius = int(self.tracked_circle[2]*4)
                 self.tracked_circle=[]
 
     def get_circle(self, frame):
@@ -202,20 +210,47 @@ def main():
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
-    frame = cv2.imread("C:\\Users\\s194149\\Downloads\\red_ball_img.png")
+    frame = cv2.imread("E://DTU//4//marinerobots//project//Testimage.jpg")
+
+    tempframe = frame.copy()
   
-    #detector.recognize_OOI(frame)
-    circle = detector.get_circle(frame)
+    print(detector.tracking)
+    circle = detector.get_circle(tempframe)
     
     if not (len(circle) == 0):
         x, y, r = circle
         print(x,y,r)
-        cv2.circle(frame, (x, y), r, (0, 255, 0), 2)  # Draw the circle boundary in green
-        cv2.circle(frame, (x, y), 2, (0, 0, 255), 3)  # Draw the center of the circle in red
-        cv2.imshow("Processed", frame)
-        cv2.waitKey(0)    
+        cv2.circle(tempframe, (x, y), r, (0, 255, 0), 2)  # Draw the circle boundary in green
+        cv2.circle(tempframe, (x, y), 2, (0, 0, 255), 3)  # Draw the center of the circle in red
+        cv2.imshow("Processed", tempframe)
+        #cv2.waitKey(0)    
     else :
         print("No circle found")
+
+    cv2.imshow("Original", frame)
+
+    while(True):
+
+        tempframe = frame.copy()
+
+        print(detector.tracking)
+        circle = detector.get_circle(tempframe)
+    
+        if not (len(circle) == 0):
+            x, y, r = circle
+            print(x,y,r)
+            cv2.circle(tempframe, (x, y), r, (0, 255, 0), 2)  # Draw the circle boundary in green
+            cv2.circle(tempframe, (x, y), 2, (0, 0, 255), 3)  # Draw the center of the circle in red
+            cv2.imshow("Tracked", tempframe)
+            #cv2.waitKey(0)
+            # Press 'q' to close the window
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break  
+        else :
+            print("No circle found")
+
+    # cv2.imshow("Original", frame)
+    # cv2.waitKey(0)
         
             
     # while True:
