@@ -2,6 +2,7 @@
 
 import rospy
 import time
+import numpy as np
 from obstacle_detector.msg import Obstacles, CircleObstacle
 from geometry_msgs.msg import Point, Vector3
 from sensor_msgs.msg import Image, CameraInfo
@@ -17,15 +18,15 @@ class ImageAnalyser:
         self.detector = CircleDetector()
 
         self.cam_info_received = False
-        self.cam_intrinsics = None
+        self.cam_intrinsic_matrix = None
         self.cam_proj_matrix = None
         self.cam_focal_length = None
         self.cam_width = None
         self.cam_height = None
-        self.cam_hfov = 1.5125              # Camera field of view in radians
+        self.cam_focal_length = None
 
 
-        self.ooi_real_radius = 1.0          # Real radius of the object of interest in meters
+        self.ooi_real_radius = 0.25          # Real radius of the object of interest in meters
 
         self.scaling = 0.25                 # Scaling tbd in processing
 
@@ -58,11 +59,16 @@ class ImageAnalyser:
         if self.cam_info_received:
             return
         else:
-            self.cam_intrinsics = msg.K
+            self.cam_intrinsic_matrix = msg.K
+            self.cam_intrinsic_matrix = np.array(self.cam_intrinsic_matrix).reshape(3, 3)
+
             self.cam_proj_matrix = msg.P
-            self.cam_focal_length = self.cam_intrinsics[0][0]
+            self.cam_proj_matrix = np.array(self.cam_proj_matrix).reshape(3, 4)
+
             self.cam_height = msg.height
             self.cam_width = msg.width
+
+            self.cam_focal_length = self.cam_intrinsic_matrix[0, 0]
 
             self.cam_info_received = True
 
@@ -85,25 +91,33 @@ class ImageAnalyser:
         rospy.loginfo(f"Circle detection time: {detect_end - detect_start}s")
 
         if circle is not None and len(circle) == 3:
-            u, v, r = circle
+            u, v, r = (np.array(circle) / self.scaling).astype(int)
+            
 
             if self.cam_info_received:
                 # Convert pixel coordinates to real-world coordinates
-                w = 1   # Scaling factor for camera coordinates
-                img_coord = [u, v, w]
+                img_coord = np.array([u, v, 1])
 
-                cam_coord = self.cam_proj_matrix.dot(img_coord)
+                # Invert the camera's intrinsic matrix
+                intrinsic_matrix_inv = np.linalg.inv(self.cam_intrinsic_matrix)
+            
+                # Convert image coordinates to normalized camera coordinates
+                cam_coord_norm = intrinsic_matrix_inv.dot(img_coord)
 
                 # Estimate distance to the object of interest
                 # F = (r x z) / R where F = focal length, R = real radius, z = distance, r = radius measured in pixels
-                z = (self.ooi_real_radius * self.cam_focal_length) / (r // self.scaling)
+                z = (self.ooi_real_radius * self.cam_focal_length) / r
+
+                # Convert normalized camera coordinates to actual camera coordinates
+                cam_coord = cam_coord_norm * z
 
                 # Populate the center point
-                self.circle_msg.center.x = cam_coord[0]
-                self.circle_msg.center.y = cam_coord[1]
-                self.circle_msg.center.z = z
+                self.circle_msg.center.x = z
+                self.circle_msg.center.y = -cam_coord[0]
+                self.circle_msg.center.z = -cam_coord[1]
                 self.circle_msg.true_radius = r
-                # Add the CircleObstacle to the Obstacle message
+                # Add the CircleObstacle to the Obstacle message (but remove old data first)
+                self.obstacle_msg.circles = []
                 self.obstacle_msg.circles.append(self.circle_msg)
 
                 self.pub2.publish(self.obstacle_msg)  # Publish circle's data

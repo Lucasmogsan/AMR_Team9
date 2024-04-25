@@ -1,8 +1,8 @@
 <launch>
 
     <arg name="activate_camera" default="true"/>
-    <arg name="activate_sonar" default="false"/>
-    <arg name="activate_fusion" default="true"/>
+    <arg name="activate_sonar" default="true"/>
+    <arg name="activate_fusion" default="false"/>
 
     <!-- Camera -->
     <group if="$(arg activate_camera)">
