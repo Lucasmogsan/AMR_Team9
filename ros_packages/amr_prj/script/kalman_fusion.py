@@ -79,8 +79,8 @@ class KalmanFusion:
 
 
 def main():
-    rospy.init_node('image_analyser', anonymous=True)
-    rospy.loginfo("image_analyser node started")
+    rospy.init_node('kalman_fusion', anonymous=True)
+    rospy.loginfo("kalman_fusion node started")
 
     kf = KalmanFusion()
 

@@ -1,0 +1,25 @@
+<launch>
+
+    <arg name="activate_camera" default="true"/>
+    <arg name="activate_sonar" default="false"/>
+    <arg name="activate_fusion" default="true"/>
+
+    <!-- Camera -->
+    <group if="$(arg activate_camera)">
+      <node pkg="amr_prj" name="image_analyser" type="image_analyser.py" output="screen">
+      </node>
+    </group>
+
+    <!-- Sonar -->
+    <group if="$(arg activate_sonar)">
+      <include file="$(find amr_prj)/launch/sonar_object_finder.launch">
+      </include>
+    </group>
+
+    <!-- Fusion (kalman) -->
+    <group if="$(arg activate_fusion)">
+      <node pkg="amr_prj" name="sensor_fusion" type="kalman_fusion.py" output="screen">
+      </node>
+    </group>
+
+</launch>
