@@ -37,7 +37,10 @@ class CircleDetector:
     def find_circles(self, frame):
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         gray = cv2.GaussianBlur(gray, self.blur_ksize, self.blur_sigma)
+        #edges = cv2.Canny(gray, 50, 150, apertureSize=3)
+
         circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, self.dp, self.min_dist, param1=self.param1, param2=self.param2, minRadius=self.min_radius, maxRadius=self.max_radius)
+        
         if circles is not None:
             circles = np.uint16(np.around(circles))
             #for i in circles[0, :]:
@@ -45,7 +48,10 @@ class CircleDetector:
             #    cv2.circle(frame, (i[0], i[1]), i[2], (0, 255, 0), 2)
                 # Draw the center of the circle
             #    cv2.circle(frame, (i[0], i[1]), 2, (255, 0, 0), 3)
-        return circles
+        
+        processing_frame = gray.copy()
+
+        return circles, processing_frame
 
     def recognize_red(self, frame):
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -77,7 +83,7 @@ class CircleDetector:
         return max_circle[0], max_circle[1], max_circle[2]  # x, y, radius
 
     def recognize_OOI(self, frame):
-        circles = self.find_circles(frame)
+        circles, processing_frame = self.find_circles(frame)
         if circles is not None:
             res = self.recognize_red(frame)
             counts = self.count_red_pixels(res, circles)
@@ -88,6 +94,7 @@ class CircleDetector:
             if(self.max_radius>400):
                 self.min_radius=100
                 self.max_radius=400
+        return processing_frame
         
     def circle_in_field_of_regard(self, ref_circle, circles):
         # Get the dimensions of the field of regard
@@ -102,7 +109,7 @@ class CircleDetector:
         #print(circles)
         i=0
         delindex = []
-
+        
         for circle in circles[0, :]:
             x = circle[0]
             y = circle[1]
@@ -167,7 +174,7 @@ class CircleDetector:
 
     def track_OOI(self, frame):
 
-        circles=self.find_circles(frame)
+        circles, processing_frame = self.find_circles(frame)
 
         if circles is not None:
             goodcircles = self.circle_in_field_of_regard(self.tracked_circle, circles)
@@ -202,12 +209,14 @@ class CircleDetector:
                     self.max_radius=400
                 self.tracked_circle=[]
 
+        return processing_frame
+
     def get_circle(self, frame):
         if self.tracking == True:
-            self.track_OOI(frame)
+            processing_frame = self.track_OOI(frame)
         else:
-            self.recognize_OOI(frame)
-        return self.tracked_circle
+            processing_frame = self.recognize_OOI(frame)
+        return self.tracked_circle, processing_frame
 
 
 def main():
@@ -227,7 +236,7 @@ def main():
     tempframe = frame.copy()
   
     print(detector.tracking)
-    circle = detector.get_circle(tempframe)
+    circle, processing_frame = detector.get_circle(tempframe)
     
     if not (len(circle) == 0):
         x, y, r = circle
@@ -246,7 +255,7 @@ def main():
         tempframe = frame.copy()
 
         print(detector.tracking)
-        circle = detector.get_circle(tempframe)
+        circle, processing_frame = detector.get_circle(tempframe)
     
         if not (len(circle) == 0):
             x, y, r = circle

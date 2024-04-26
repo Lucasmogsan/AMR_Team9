@@ -26,19 +26,18 @@ class KalmanFusion:
         self.sub1 = rospy.Subscriber(sub_topic_name1, Obstacles, self.callback_1)
         self.cov_sonar = [[0.1, 0, 0],
                           [0, 0.1, 0],
-                          [0, 0, 100]]
+                          [0, 0, 1000000]]
 
 
         sub_topic_name2 = 'target/cam'
         self.sub1 = rospy.Subscriber(sub_topic_name2, Obstacles, self.callback_2)
-        self.cov_cam = [[0.1, 0, 0],
-                        [0, 0.1, 0],
-                        [0, 0, 10]]
+        self.cov_cam = [[10, 0, 0],
+                        [0, 0.5, 0],
+                        [0, 0, 0.5]]
 
         # PUBLISHER
         pub_topic_name1 = 'target/kf'
         self.pub1 = rospy.Publisher(pub_topic_name1, Obstacles, queue_size=10)
-
 
 
         # Kalman Filter
@@ -67,7 +66,7 @@ class KalmanFusion:
 
     # Callback function for the subscribers
     def callback_1(self, msg):
-        if len(msg.circles) == 0:
+        if len(msg.circles) != 0:
             self.flag_sonar = True
         self.sonar_msg = msg
 
@@ -110,6 +109,19 @@ def main():
         kf.f.predict()    # Prediction step
         rospy.loginfo("Prediction step")
 
+
+        # Remove old circle data
+        obstacle_msg.circles = []
+
+        # Add header
+        obstacle_msg.header = Header()
+        obstacle_msg.header.stamp = rospy.Time.now()
+
+        # Populate the velocity
+        circle.velocity = Vector3()
+        circle.velocity.x = kf.f.x[3][0]
+        circle.velocity.y = kf.f.x[4][0]
+        circle.velocity.z = kf.f.x[5][0]
 
         # Populate the center point
         circle.center = Point()

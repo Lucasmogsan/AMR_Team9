@@ -4,6 +4,7 @@ import rospy
 import time
 import numpy as np
 from obstacle_detector.msg import Obstacles, CircleObstacle
+from std_msgs.msg import Header
 from geometry_msgs.msg import Point, Vector3
 from sensor_msgs.msg import Image, CameraInfo
 from amr_prj.msg import Circle
@@ -17,6 +18,7 @@ class ImageAnalyser:
         self.bridge = CvBridge()
         self.detector = CircleDetector()
 
+        # Camera and image processing parameters
         self.cam_info_received = False
         self.cam_intrinsic_matrix = None
         self.cam_proj_matrix = None
@@ -24,7 +26,6 @@ class ImageAnalyser:
         self.cam_width = None
         self.cam_height = None
         self.cam_focal_length = None
-
 
         self.ooi_real_radius = 0.25          # Real radius of the object of interest in meters
 
@@ -34,7 +35,6 @@ class ImageAnalyser:
         robot_name = '/bluerov2'
         camera_name = '/camera_front'
         cam_topic = robot_name + camera_name
-
 
         # Subscriber
         sub_topic_name1 = cam_topic + '/camera_image'
@@ -54,6 +54,8 @@ class ImageAnalyser:
         self.obstacle_msg = Obstacles()
         self.circle_msg = CircleObstacle()
         self.circle_msg.center = Point()
+        self.circle_msg.velocity = Vector3()
+        self.obstacle_msg.header = Header()
 
     def callback_cam_info(self, msg):
         if self.cam_info_received:
@@ -86,14 +88,14 @@ class ImageAnalyser:
 
         # Process the image with the CircleDetector
         detect_start = time.time()
-        circle = self.detector.get_circle(cv_image)
+        circle, processing_frame = self.detector.get_circle(cv_image)
+        processing_frame = cv2.cvtColor(processing_frame, cv2.COLOR_GRAY2BGR)
         detect_end = time.time()
         rospy.loginfo(f"Circle detection time: {detect_end - detect_start}s")
 
         if circle is not None and len(circle) == 3:
             u, v, r = (np.array(circle) / self.scaling).astype(int)
             
-
             if self.cam_info_received:
                 # Convert pixel coordinates to real-world coordinates
                 img_coord = np.array([u, v, 1])
@@ -111,25 +113,25 @@ class ImageAnalyser:
                 # Convert normalized camera coordinates to actual camera coordinates
                 cam_coord = cam_coord_norm * z
 
-                # Populate the center point
+                # Populate the object center message
                 self.circle_msg.center.x = z
                 self.circle_msg.center.y = -cam_coord[0]
                 self.circle_msg.center.z = -cam_coord[1]
                 self.circle_msg.true_radius = r
-                # Add the CircleObstacle to the Obstacle message (but remove old data first)
-                self.obstacle_msg.circles = []
-                self.obstacle_msg.circles.append(self.circle_msg)
+                
+                self.obstacle_msg.header.stamp = rospy.Time.now()              
+                self.obstacle_msg.circles.append(self.circle_msg)   # Add the CircleObstacle to the Obstacle message
 
                 self.pub2.publish(self.obstacle_msg)  # Publish circle's data
 
             # Draw the circle on the image
-            cv2.circle(cv_image, (u, v), r, (0, 255, 0), 2)  # Draw the circle boundary in green
-            cv2.circle(cv_image, (u, v), 2, (0, 0, 255), 3)  # Draw the center of the circle in red
+            cv2.circle(processing_frame, (int(u*self.scaling), int(v*self.scaling)), int(r*self.scaling), (0, 255, 0), 2)  # Draw the circle boundary in green
+            cv2.circle(processing_frame, (int(u*self.scaling), int(v*self.scaling)), 2, (0, 0, 255), 3)  # Draw the center of the circle in red
 
 
         # Convert the processed image back to a ROS image message
         try:
-            img_msg = self.bridge.cv2_to_imgmsg(cv_image, "bgr8")
+            img_msg = self.bridge.cv2_to_imgmsg(processing_frame, "bgr8")   # bgr8 or mono8
         except CvBridgeError as e:
             rospy.logerr("CvBridge Error: {0}".format(e))
             return
