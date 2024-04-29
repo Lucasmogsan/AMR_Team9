@@ -1,17 +1,17 @@
 # PID parameters for surge control
-position_control/surge_p: 1
-position_control/surge_i: 0.1
-position_control/surge_d: 0.001
+position_control/surge_p: 3.4619
+position_control/surge_i: 0.0275
+position_control/surge_d: 21.157
 position_control/surge_sat: 3.0
-
+   
 # PID parameters for yaw control
-position_control/yaw_p: 1.5
-position_control/yaw_i: 0
-position_control/yaw_d: 0.02
+position_control/yaw_p: 0.09
+position_control/yaw_i: 0.001
+position_control/yaw_d: 0.03
 position_control/yaw_sat: 20
 
 # PID parameters for heave control
-position_control/heave_p: 1.5
-position_control/heave_i: 0.5
-position_control/heave_d: 0.1
+position_control/heave_p: 0.5
+position_control/heave_i: 0.02
+position_control/heave_d: 1
 position_control/heave_sat: 3
