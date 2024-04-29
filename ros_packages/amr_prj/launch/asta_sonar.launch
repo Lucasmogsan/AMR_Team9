@@ -1,5 +1,15 @@
-rosrun oculus_sonar_driver reprocess_oculus_raw_data reprocess_oculus_raw_data/raw_data:=oculus/raw_data reprocess_oculus_raw_data/sonar_image:=sonar_image
+<launch>
+    <!-- Run the reprocess_oculus_raw_data node -->
+    <node name="reprocess_oculus_raw_data" pkg="oculus_sonar_driver" type="reprocess_oculus_raw_data" output="screen">
+        <remap from="raw_data" to="oculus/raw_data"/>
+        <remap from="sonar_image" to="sonar_image"/>
+    </node>
 
-rosrun sonar_image_proc draw_sonar_node
+    <!-- Run the draw_sonar_node -->
+    <node name="draw_sonar_node" pkg="sonar_image_proc" type="draw_sonar_node" output="screen"/>
 
-rosrun sonar_image_proc sonar_pointcloud.py _frame_id:="map"
+    <!-- Run the sonar_pointcloud.py script -->
+    <node name="sonar_pointcloud" pkg="sonar_image_proc" type="sonar_pointcloud.py" output="screen">
+        <param name="frame_id" value="map"/>
+    </node>
+</launch>

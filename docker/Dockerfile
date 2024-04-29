@@ -112,6 +112,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-tk \
     x11-apps
 
+RUN python3 -m pip install --user filterpy
 
 # RUN git clone https://gitlab.gbar.dtu.dk/dtu-asl/courses/34763-autonomous-marine-robotics && \
 #     cd 34763-autonomous-marine-robotics && git remote rename origin course_repo
@@ -128,7 +129,6 @@ RUN wget $CONDA_URL \
     && mkdir /root/.conda \
     && bash $(basename $CONDA_URL) -b \
     && rm -f $(basename $CONDA_URL)
-
 
 # Create new user and home directory
 RUN groupadd --gid $GID $USERNAME \
