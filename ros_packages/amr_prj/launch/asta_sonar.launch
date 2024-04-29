@@ -1,0 +1,5 @@
+rosrun oculus_sonar_driver reprocess_oculus_raw_data reprocess_oculus_raw_data/raw_data:=oculus/raw_data reprocess_oculus_raw_data/sonar_image:=sonar_image
+
+rosrun sonar_image_proc draw_sonar_node
+
+rosrun sonar_image_proc sonar_pointcloud.py _frame_id:="map"

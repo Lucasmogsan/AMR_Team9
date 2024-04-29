@@ -16,6 +16,7 @@ class KalmanFusion:
         # Flags
         self.flag_sonar = False
         self.flag_cam = False
+        self.flag_save_plots = False
 
         self.sonar_msg = None
         self.cam_msg = None
@@ -49,7 +50,7 @@ class KalmanFusion:
         # Kalman Filter
         self.update_rate = 50
         self.f = KalmanFilter(6, 3)
-        self.f.x = np.zeros((6, 1))     # State vector: x, y, z, vx, vy, vz
+        self.f.x = np.zeros((6, 1))     # State vector: [x, y, z, vx, vy, vz]
         dt = 1 / self.update_rate       # Time step
         self.f.F = np.asarray(          # State transition matrix
             [[1., 0., 0., dt, 0., 0.],
@@ -115,9 +116,10 @@ def main():
             # rospy.loginfo(f"Covariance X: {kf.f.P[0][0]}")
             # rospy.loginfo(f"Covariance Z: {kf.f.P[2][2]}")
             # For plotting
-            kf.sonar_pos.append(np.array([kf.sonar_msg.header.stamp.to_sec(), kf.sonar_msg.circles[0].center.x, kf.sonar_msg.circles[0].center.y, kf.sonar_msg.circles[0].center.z]))
-            kf.kf_pos.append(np.array([kf.sonar_msg.header.stamp.to_sec(), kf.f.x[0][0], kf.f.x[1][0], kf.f.x[2][0]]))
-            kf.kf_cov.append(np.array([kf.sonar_msg.header.stamp.to_sec(), kf.f.P[0][0], kf.f.P[1][1], kf.f.P[2][2]]))
+            if kf.flag_save_plots:
+                kf.sonar_pos.append(np.array([kf.sonar_msg.header.stamp.to_sec(), kf.sonar_msg.circles[0].center.x, kf.sonar_msg.circles[0].center.y, kf.sonar_msg.circles[0].center.z]))
+                kf.kf_pos.append(np.array([kf.sonar_msg.header.stamp.to_sec(), kf.f.x[0][0], kf.f.x[1][0], kf.f.x[2][0]]))
+                kf.kf_cov.append(np.array([kf.sonar_msg.header.stamp.to_sec(), kf.f.P[0][0], kf.f.P[1][1], kf.f.P[2][2]]))
 
 
         if kf.flag_cam:
@@ -135,9 +137,10 @@ def main():
             # rospy.loginfo(f"Covariance X: {kf.f.P[0][0]}")
             # rospy.loginfo(f"Covariance Z: {kf.f.P[2][2]}")
             # For plotting
-            kf.cam_pos.append(np.array([kf.cam_msg.header.stamp.to_sec(), kf.cam_msg.circles[0].center.x, kf.cam_msg.circles[0].center.y, kf.cam_msg.circles[0].center.z]))
-            kf.kf_pos.append(np.array([kf.cam_msg.header.stamp.to_sec(), kf.f.x[0][0], kf.f.x[1][0], kf.f.x[2][0]]))
-            kf.kf_cov.append(np.array([kf.cam_msg.header.stamp.to_sec(), kf.f.P[0][0], kf.f.P[1][1], kf.f.P[2][2]]))
+            if kf.flag_save_plots:
+                kf.cam_pos.append(np.array([kf.cam_msg.header.stamp.to_sec(), kf.cam_msg.circles[0].center.x, kf.cam_msg.circles[0].center.y, kf.cam_msg.circles[0].center.z]))
+                kf.kf_pos.append(np.array([kf.cam_msg.header.stamp.to_sec(), kf.f.x[0][0], kf.f.x[1][0], kf.f.x[2][0]]))
+                kf.kf_cov.append(np.array([kf.cam_msg.header.stamp.to_sec(), kf.f.P[0][0], kf.f.P[1][1], kf.f.P[2][2]]))
 
         # only predict if state vector is not zeroes
         if np.any(kf.f.x):
@@ -178,12 +181,13 @@ def main():
             # rospy.loginfo(f"Covariance X: {kf.f.P[0][0]}")
             # rospy.loginfo(f"Covariance Z: {kf.f.P[2][2]}")
             # For plotting
-            kf.kf_pos.append(np.array([obstacle_msg.header.stamp.to_sec(), kf.f.x[0][0], kf.f.x[1][0], kf.f.x[2][0]]))
-            kf.kf_cov.append(np.array([obstacle_msg.header.stamp.to_sec(), kf.f.P[0][0], kf.f.P[1][1], kf.f.P[2][2]]))
+            if kf.flag_save_plots:
+                kf.kf_pos.append(np.array([obstacle_msg.header.stamp.to_sec(), kf.f.x[0][0], kf.f.x[1][0], kf.f.x[2][0]]))
+                kf.kf_cov.append(np.array([obstacle_msg.header.stamp.to_sec(), kf.f.P[0][0], kf.f.P[1][1], kf.f.P[2][2]]))
 
             # Save the data every 10 seconds
             counter += 1
-            if counter % kf.update_rate * 10 == 0:
+            if kf.flag_save_plots and counter % kf.update_rate * 10 == 0:
                 path_save = '/overlay_ws/src/amr_prj/script/plots/'
                 np.save(path_save + 'sonar_pos.npy', np.array(kf.sonar_pos))
                 np.save(path_save + 'cam_pos.npy', np.array(kf.cam_pos))

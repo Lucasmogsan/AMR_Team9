@@ -2,7 +2,7 @@
 
     <arg name="activate_camera" default="true"/>
     <arg name="activate_sonar" default="true"/>
-    <arg name="activate_fusion" default="false"/>
+    <arg name="activate_fusion" default="true"/>
 
     <!-- Camera -->
     <group if="$(arg activate_camera)">
