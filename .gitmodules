@@ -1,15 +1,12 @@
 [submodule "ros_packages/obstacle_detector"]
 	path = ros_packages/obstacle_detector
 	url = git@github.com:tysik/obstacle_detector.git
-
 [submodule "ros_packages/oculus_sonar_driver"]
 	path = ros_packages/oculus_sonar_driver
-	url = git@gitlab.com:apl-ocean-engineering/oculus_sonar_driver.git
-
+	url = https://gitlab.com/apl-ocean-engineering/oculus_sonar_driver.git
 [submodule "ros_packages/sonar_image_proc"]
 	path = ros_packages/sonar_image_proc
-	url = git@github.com:apl-ocean-engineering/sonar_image_proc.git
-
+	url = https://github.com/apl-ocean-engineering/sonar_image_proc.git
 [submodule "ros_packages/marine_msgs"]
 	path = ros_packages/marine_msgs
-	url = git@github.com:apl-ocean-engineering/marine_msgs.git
+	url = https://github.com/apl-ocean-engineering/marine_msgs.git
