@@ -210,7 +210,7 @@ def main():
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
-    frame = cv2.imread("E://DTU//4//marinerobots//project//Testimage.jpg")
+    frame = cv2.imread("C:\\Users\\s194149\\Downloads\\red_ball_img.png")
 
     tempframe = frame.copy()
   
