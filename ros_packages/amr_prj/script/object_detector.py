@@ -3,10 +3,10 @@ import numpy as np
 import sys
 
 class CircleDetector:
-    def __init__(self, dp=1, min_dist=20, param1=50, param2=25, min_radius=25, max_radius=400,
+    def __init__(self, dp=1, min_dist=20, param1=50, param2=30, min_radius=25, max_radius=400,
                  hsv_lower_red1=(0, 50, 50), hsv_upper_red1=(10, 255, 255),
                  hsv_lower_red2=(170, 50, 50), hsv_upper_red2=(180, 255, 255),
-                 blur_ksize=(5, 5), blur_sigma=2):
+                 blur_ksize=(5, 5), blur_sigma=1):
         
         # TODO: Assess min, max radius and min distance
         # TODO: Optimize hsv vlaues for OOI

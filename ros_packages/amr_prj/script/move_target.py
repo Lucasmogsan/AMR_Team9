@@ -13,8 +13,8 @@ def ooi_simple_move_publisher():
     rospy.init_node('simple_movement', anonymous=True)
 
     # Get parameters from ROS parameter server
-    period = rospy.get_param('~period', 10.0)
-    speed = rospy.get_param('~speed', 0.25)
+    period = rospy.get_param('~period', 25.0)
+    speed = rospy.get_param('~speed', -0.25)
 
     pub = rospy.Publisher('ooi/cmd_vel', Twist, queue_size=10)
 
@@ -47,7 +47,7 @@ def ooi_circle_move_publisher():
     rospy.init_node('circle_movement', anonymous=True)
 
     # Get parameters from ROS parameter server
-    period = rospy.get_param('~period', 6.0)
+    period = rospy.get_param('~period', 30)
     speed = rospy.get_param('~speed', 0.5)
     angular_speed = rospy.get_param('~angular_speed', 0.1)
 
