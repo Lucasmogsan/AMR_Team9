@@ -15,3 +15,15 @@ repositories:
   apl_msgs:
     type: git
     url: https://gitlab.com/apl-ocean-engineering/apl_msgs.git
+
+  blueprint_oculus_msgs:
+    type: git
+    url: https://gitlab.com/apl-ocean-engineering/blueprint_oculus_msgs.git
+
+  liboculus:
+    type: git
+    url: https://github.com/apl-ocean-engineering/liboculus.git
+
+  g3log_ros:
+    type: git
+    url: https://gitlab.com/apl-ocean-engineering/g3log_ros.git

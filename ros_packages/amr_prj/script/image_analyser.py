@@ -25,7 +25,6 @@ class ImageAnalyser:
         self.cam_focal_length = None
         self.cam_width = None
         self.cam_height = None
-        self.cam_focal_length = None
 
         self.ooi_real_radius = 0.25          # Real radius of the object of interest in meters
 
