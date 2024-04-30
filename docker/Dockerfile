@@ -40,9 +40,7 @@ RUN apt-get update && apt-get install -y \
   libarmadillo-dev && \
   rm -rf /var/lib/apt/lists/*
 
-RUN python3 -m pip install --user \
-  scipy \
-  filterpy
+RUN python3 -m pip install --user scipy
 
 # Create Catkin workspace 
 RUN mkdir -p /underlay_ws/src 
@@ -111,6 +109,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-matplotlib \
     python3-tk \
     x11-apps
+
+RUN python3 -m pip install --user filterpy
 
 
 # RUN git clone https://gitlab.gbar.dtu.dk/dtu-asl/courses/34763-autonomous-marine-robotics && \
