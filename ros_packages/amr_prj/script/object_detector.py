@@ -190,7 +190,7 @@ class CircleDetector:
                     self.max_radius=400
             else:
                 self.trackfailcount += 1
-                if self.trackfailcount>10:
+                if self.trackfailcount>2:
                     self.tracking = False
                     self.min_radius = int(self.tracked_circle[2]*0.25)
                     self.max_radius = int(self.tracked_circle[2]*4)
@@ -200,7 +200,7 @@ class CircleDetector:
                     self.tracked_circle=[]
         else:
             self.trackfailcount += 1
-            if self.trackfailcount>10:
+            if self.trackfailcount>2:
                 self.tracking = False
                 self.min_radius = int(self.tracked_circle[2]*0.25)
                 self.max_radius = int(self.tracked_circle[2]*4)
