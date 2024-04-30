@@ -32,7 +32,6 @@ RUN apt-get update && apt-get install -y \
   ros-${ROS_DISTRO}-cv-bridge \
   ros-${ROS_DISTRO}-vision-opencv \
   ros-${ROS_DISTRO}-mavros && \
-  ros-${ROS_DISTRO}-plotjuggler \
   rm -rf /var/lib/apt/lists/*
 
 # Install Armadillo
@@ -111,6 +110,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     nano \
     python3-matplotlib \
     python3-tk \
+    ros-$ROS_DISTRO-plotjuggler-ros \
     x11-apps
 
 

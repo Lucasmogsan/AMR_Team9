@@ -21,6 +21,14 @@ class TrackControlNode:
         self.last_control_signal = 0
         self.last_time = 0.001
 
+        base_path = "/overlay_ws/src/amr_prj/script/plots/data"
+        timestamp = time.strftime("%Y%m%d-%H%M%S")
+        filename = f"control_data_{timestamp}.csv"
+        self.data_file_path = os.path.join(base_path, filename)
+        self.data_file = open(self.data_file_path, 'w', newline='')
+        self.csv_writer = csv.writer(self.data_file)
+        self.csv_writer.writerow(['surge', 'sruge_gt', 'surge_control', 'yaw', 'yaw_gt', 'yaw_control', 'heave', 'heave_gt', 'heave_control'])  # Header row
+
         print('TrackControlNode: initializing node')
         self.load_pid_configs()
         # PID controller for surge motion control
@@ -73,20 +81,10 @@ class TrackControlNode:
         self.bluerov2_measured_orientation = msg.orientation
 
     def log_data(self, surge, sruge_gt, surge_control, yaw, yaw_gt, yaw_control, heave, heave_gt, heave_control):
-        self.data_log.append((surge, sruge_gt, surge_control, yaw, yaw_gt, yaw_control, heave, heave_gt, heave_control))
-
-    def save_data(self):
-        base_path = "/overlay_ws/src/amr_prj/script/plots/data"
-        base_filename = "control_data"
-        
-        timestamp = time.strftime("%Y%m%d-%H%M%S")
-        filename = f"{base_filename}_{timestamp}.npy"
-
-        # Save the data log as a NumPy array
-        np.save(os.path.join(base_path, filename), np.array(self.data_log))
+        self.csv_writer.writerow([surge, sruge_gt, surge_control, yaw, yaw_gt, yaw_control, heave, heave_gt, heave_control])
 
     def on_shutdown(self):
-        self.save_data()
+        self.data_file.close()
 
     def get_rov_heading(self):
         # Assuming self.current_bluerov2_orientation is set to a geometry_msgs/Quaternion
