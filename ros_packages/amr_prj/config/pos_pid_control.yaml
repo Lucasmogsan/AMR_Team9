@@ -13,5 +13,5 @@ position_control/yaw_sat: 20
 # PID parameters for heave control
 position_control/heave_p: 0.5
 position_control/heave_i: 0.02
-position_control/heave_d: 1
+position_control/heave_d: 1.2
 position_control/heave_sat: 3

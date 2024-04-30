@@ -81,19 +81,13 @@ class TrackControlNode:
     def bluerov2_position_callback_kf(self,msg):
         self.bluerov2_measured_orientation = msg.orientation
 
-    def log_data(self, *args):
-        # Log data with timestamp
-        timestamp = rospy.get_time()
-        data_entry = [timestamp] + list(args)
-        self.data_log.append(data_entry)
-
-        # Append data to numpy file
-        np.save(self.data_file_path, np.array(data_entry))
+    def log_data(self, surge, surge_gt, surge_control, yaw, yaw_gt, yaw_control, heave, heave_gt, heave_control):
+        time_stamp = rospy.Time.now()
+        self.data_log.append((time_stamp, surge, surge_gt, surge_control, yaw, yaw_gt, yaw_control, heave, heave_gt, heave_control))
 
     def on_shutdown(self):
         # Save remaining data to numpy file before shutdown
-        if self.data_log:
-            np.save(self.data_file_path, np.array(self.data_log))
+        np.save(self.data_file_path, np.array(self.data_log))
 
 
     def get_rov_heading(self):
@@ -151,14 +145,14 @@ class TrackControlNode:
             yaw_control_signal = self.pid_yaw.update(0, yaw_error, dt)  # Setpoint is 0 for yaw, we want no yaw error
 
             # Heave Control
-            heave_error = self.current_ooi_position_kf.circles[0].center.z
+            heave_error = self.current_ooi_position_kf.circles[0].center.z-0.022020-0.007058
             heave_control_signal = self.pid_heave.update(0, heave_error, dt)  # Setpoint is 0 for yaw, we want no yaw error
             
             # Log the data | [surge, ]
-            surge_gt = self.current_ooi_position_gt.x
+            surge_gt = (self.current_ooi_position_gt.x-self.gt_bluerov2_position.x)
             yaw_gt = self.yaw_gt
-            heave_gt = (self.current_ooi_position_gt.z-self.gt_bluerov2_position.z)
-            
+            heave_gt = (self.current_ooi_position_gt.z-self.gt_bluerov2_position.z -0.022020-0.007058)
+            print(f"{surge_error:1f}, {surge_gt:1f}")
             self.log_data(surge_error, surge_gt, surge_control_signal,
                           yaw_error, yaw_gt, yaw_control_signal,
                           heave_error, heave_gt, heave_control_signal)
@@ -167,9 +161,9 @@ class TrackControlNode:
             control_msg = Twist() # TODO: Understand why control signals are flipped
 
             # TODO: Implement logic for dependent (coupled) movement
-            #control_msg.linear.x = -surge_control_signal
-            control_msg.angular.z = -yaw_control_signal
-            control_msg.linear.z =  -heave_control_signal  
+            control_msg.linear.x = -surge_control_signal
+            #control_msg.angular.z = -yaw_control_signal
+            #control_msg.linear.z =  -heave_control_signal  
             self.velocity_publisher.publish(control_msg)
             
             # Update last_time for the next cycle
