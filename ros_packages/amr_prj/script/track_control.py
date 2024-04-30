@@ -18,19 +18,19 @@ class TrackControlNode:
     def __init__(self):
         rospy.init_node('track_control_node', anonymous=True)
         self.desired_distance = 1.0
-        self.data_log = []
         self.last_control_signal = 0
         self.last_time = 0.001
 
-        base_path = "/overlay_ws/src/amr_prj/script/plots/data"
         timestamp = time.strftime("%Y%m%d-%H%M%S")
-        filename = f"control_data_{timestamp}.csv"
-        self.data_file_path = os.path.join(base_path, filename)
-        self.data_file = open(self.data_file_path, 'w', newline='')
-        self.csv_writer = csv.writer(self.data_file)
-        self.csv_writer.writerow(['surge', 'sruge_gt', 'surge_control', 'yaw', 'yaw_gt', 'yaw_control', 'heave', 'heave_gt', 'heave_control'])  # Header row
+        filename = f"control_data_{timestamp}.npy"
+        self.data_log = []
+        self.base_path = "/overlay_ws/src/amr_prj/script/plots/data"
+        self.data_file_path = os.path.join(self.base_path, filename)
 
+        self.last_time = rospy.get_time()
         print('TrackControlNode: initializing node')
+        
+        
         self.load_pid_configs()
         # PID controller for surge motion control
         self.pid_surge = PIDRegulator(
@@ -81,11 +81,20 @@ class TrackControlNode:
     def bluerov2_position_callback_kf(self,msg):
         self.bluerov2_measured_orientation = msg.orientation
 
-    def log_data(self, surge, sruge_gt, surge_control, yaw, yaw_gt, yaw_control, heave, heave_gt, heave_control):
-        self.csv_writer.writerow([surge, sruge_gt, surge_control, yaw, yaw_gt, yaw_control, heave, heave_gt, heave_control])
+    def log_data(self, *args):
+        # Log data with timestamp
+        timestamp = rospy.get_time()
+        data_entry = [timestamp] + list(args)
+        self.data_log.append(data_entry)
+
+        # Append data to numpy file
+        np.save(self.data_file_path, np.array(data_entry))
 
     def on_shutdown(self):
-        self.data_file.close()
+        # Save remaining data to numpy file before shutdown
+        if self.data_log:
+            np.save(self.data_file_path, np.array(self.data_log))
+
 
     def get_rov_heading(self):
         # Assuming self.current_bluerov2_orientation is set to a geometry_msgs/Quaternion
@@ -144,7 +153,6 @@ class TrackControlNode:
             # Heave Control
             heave_error = self.current_ooi_position_kf.circles[0].center.z
             heave_control_signal = self.pid_heave.update(0, heave_error, dt)  # Setpoint is 0 for yaw, we want no yaw error
-            print(heave_error)
             
             # Log the data | [surge, ]
             surge_gt = self.current_ooi_position_gt.x
@@ -160,7 +168,7 @@ class TrackControlNode:
 
             # TODO: Implement logic for dependent (coupled) movement
             #control_msg.linear.x = -surge_control_signal
-            #control_msg.angular.z = -yaw_control_signal
+            control_msg.angular.z = -yaw_control_signal
             control_msg.linear.z =  -heave_control_signal  
             self.velocity_publisher.publish(control_msg)
             

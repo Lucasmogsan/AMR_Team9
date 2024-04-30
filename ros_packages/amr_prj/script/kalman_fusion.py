@@ -36,7 +36,7 @@ class KalmanFusion:
 
 
         sub_topic_name2 = 'target/cam'
-        self.sub1 = rospy.Subscriber(sub_topic_name2, Obstacles, self.callback_2)
+        self.sub2 = rospy.Subscriber(sub_topic_name2, Obstacles, self.callback_2)
         self.cov_cam = [[10, 0, 0],
                         [0, 0.5, 0],
                         [0, 0, 0.5]]

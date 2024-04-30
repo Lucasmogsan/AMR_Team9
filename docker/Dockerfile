@@ -32,6 +32,7 @@ RUN apt-get update && apt-get install -y \
   ros-${ROS_DISTRO}-cv-bridge \
   ros-${ROS_DISTRO}-vision-opencv \
   ros-${ROS_DISTRO}-mavros && \
+  pip3 install filterpy && \
   rm -rf /var/lib/apt/lists/*
 
 # Install Armadillo
@@ -85,7 +86,11 @@ RUN source /opt/ros/noetic/setup.bash \
 #COPY ./some_folder/ /overlay_ws/src/some_folder/
 #COPY ./some_other_folder/ /overlay_ws/src/some_other_folder/
 RUN source /opt/ros/noetic/setup.bash \
- && catkin build
+ && catkin build \
+ && source /opt/ros/noetic/setup.bash 
+
+ # Install Python packages
+RUN pip3 install filterpy pandas
 
 # Set up the work directory and entrypoint
 WORKDIR /overlay_ws
@@ -112,6 +117,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-tk \
     ros-$ROS_DISTRO-plotjuggler-ros \
     x11-apps
+
 
 
 # RUN git clone https://gitlab.gbar.dtu.dk/dtu-asl/courses/34763-autonomous-marine-robotics && \
