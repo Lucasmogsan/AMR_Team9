@@ -14,7 +14,7 @@ def ooi_simple_move_publisher():
 
     # Get parameters from ROS parameter server
     period = rospy.get_param('~period', 10.0)
-    speed = rospy.get_param('~speed', 0.1)
+    speed = rospy.get_param('~speed', 0)
 
     pub = rospy.Publisher('ooi/cmd_vel', Twist, queue_size=10)
 
@@ -23,7 +23,7 @@ def ooi_simple_move_publisher():
     while not rospy.is_shutdown():
 
         twist_msg = Twist()
-        twist_msg.linear.z = speed  # Initial linear velocity
+        twist_msg.linear.y = speed  # Initial linear velocity
 
         # Publish initial velocity for T/2 seconds
         start_time = rospy.Time.now()
@@ -32,7 +32,7 @@ def ooi_simple_move_publisher():
             rate.sleep()
 
         # Change linear velocity to -speed
-        twist_msg.linear.z = -speed
+        twist_msg.linear.y = -speed
 
         # Publish negative velocity for T/2 seconds
         start_time = rospy.Time.now()
@@ -48,7 +48,7 @@ def ooi_circle_move_publisher():
 
     # Get parameters from ROS parameter server
     period = rospy.get_param('~period', 10.0)
-    speed = rospy.get_param('~speed', 0.001)
+    speed = rospy.get_param('~speed', 0.2)
     angular_speed = rospy.get_param('~angular_speed', 0.1)
 
     pub = rospy.Publisher('ooi/cmd_vel', Twist, queue_size=10)
@@ -58,7 +58,7 @@ def ooi_circle_move_publisher():
     twist_msg = Twist()
 
     while not rospy.is_shutdown():
-        twist_msg.linear.x = speed  # Constant linear velocity
+        twist_msg.linear.y = speed  # Constant linear velocity
         twist_msg.angular.z = angular_speed  # Constant angular velocity
 
         # Publish velocity

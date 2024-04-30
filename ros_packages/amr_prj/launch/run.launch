@@ -56,7 +56,7 @@
     <!-- Add the ooi to the world  -->
     <include file="$(find amr_prj)/launch/ooi.launch">
         <arg name="x" default="2.0"/>
-        <arg name="y" default="$(arg y)"/>
+        <arg name="y" default="-1.3"/>
         <arg name="z" default="$(arg z)"/>
         <arg name="yaw" default="$(arg yaw)"/>
         <arg name="use_ned_frame" value="$(arg use_ned_frame)"/>

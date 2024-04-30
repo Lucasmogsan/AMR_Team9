@@ -5,8 +5,8 @@ position_control/surge_d: 21.157
 position_control/surge_sat: 3.0
    
 # PID parameters for yaw control
-position_control/yaw_p: 0.09
-position_control/yaw_i: 0.001
+position_control/yaw_p: 1.5
+position_control/yaw_i: 0
 position_control/yaw_d: 0.03
 position_control/yaw_sat: 20
 

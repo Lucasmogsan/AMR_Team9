@@ -30,7 +30,8 @@ class TrackControlNode:
         self.last_time = rospy.get_time()
         print('TrackControlNode: initializing node')
         
-        
+        self.yaw_ooi_gt = 0 # In radians
+        self.yaw_bluerov_gt = 0
         self.load_pid_configs()
         # PID controller for surge motion control
         self.pid_surge = PIDRegulator(
@@ -70,6 +71,7 @@ class TrackControlNode:
 
     def ooi_position_callback_gt(self, msg):
         self.current_ooi_position_gt = msg.pose.pose.position
+        self.current_ooi_orientation_gt = msg.pose.pose.orientation
 
     def bluerov2_position_callback_gt(self, msg):
         self.gt_bluerov2_position = msg.pose.pose.position
@@ -80,6 +82,7 @@ class TrackControlNode:
         
     def bluerov2_position_callback_kf(self,msg):
         self.bluerov2_measured_orientation = msg.orientation
+        
 
     def log_data(self, surge, surge_gt, surge_control, yaw, yaw_gt, yaw_control, heave, heave_gt, heave_control):
         time_stamp = rospy.Time.now()
@@ -114,10 +117,33 @@ class TrackControlNode:
 
     def calculate_yaw_error(self):
         
-        # Ground truth
-        dx = self.current_ooi_position_gt.x
+        quaternion_bluerov2_gt = (
+            self.gt_bluerov2_orientation.x,
+            self.gt_bluerov2_orientation.y,
+            self.gt_bluerov2_orientation.z,
+            self.gt_bluerov2_orientation.w
+        )
+        # Convert quaternion to Euler angles (roll, pitch, yaw)
+        euler = tf.transformations.euler_from_quaternion(quaternion_bluerov2_gt)
+        # euler is a tuple (roll, pitch, yaw), yaw is what we need
+        self.yaw_bluerov_gt = euler[2]  # In radians
+        
+        quaternion_ooi_gt = (
+            self.current_ooi_orientation_gt.x,
+            self.current_ooi_orientation_gt.y,
+            self.current_ooi_orientation_gt.z,
+            self.current_ooi_orientation_gt.w
+        )
+        # Convert quaternion to Euler angles (roll, pitch, yaw)
+        euler = tf.transformations.euler_from_quaternion(quaternion_ooi_gt)
+        # euler is a tuple (roll, pitch, yaw), yaw is what we need
+        self.yaw_ooi_gt = euler[2]  # In radians
+
         dy = self.current_ooi_position_gt.y
-        self.yaw_gt = np.arctan2(dy,dx)
+        dx = self.current_ooi_position_gt.x
+        self.yaw_ooi_gt = np.arctan2(dy, dx)
+
+        
         
         # Kalman filter
         dy = self.current_ooi_position_kf.circles[0].center.y 
@@ -150,9 +176,9 @@ class TrackControlNode:
             
             # Log the data | [surge, ]
             surge_gt = (self.current_ooi_position_gt.x-self.gt_bluerov2_position.x)
-            yaw_gt = self.yaw_gt
+            yaw_gt = self.yaw_ooi_gt - self.yaw_bluerov_gt 
             heave_gt = (self.current_ooi_position_gt.z-self.gt_bluerov2_position.z -0.022020-0.007058)
-            print(f"{surge_error:1f}, {surge_gt:1f}")
+            print(f"{yaw_error:1f}, {yaw_gt:1f}")
             self.log_data(surge_error, surge_gt, surge_control_signal,
                           yaw_error, yaw_gt, yaw_control_signal,
                           heave_error, heave_gt, heave_control_signal)
@@ -161,9 +187,9 @@ class TrackControlNode:
             control_msg = Twist() # TODO: Understand why control signals are flipped
 
             # TODO: Implement logic for dependent (coupled) movement
-            control_msg.linear.x = -surge_control_signal
-            #control_msg.angular.z = -yaw_control_signal
-            #control_msg.linear.z =  -heave_control_signal  
+            #control_msg.linear.x = -surge_control_signal
+            control_msg.angular.z = -yaw_control_signal
+            control_msg.linear.z =  -heave_control_signal  
             self.velocity_publisher.publish(control_msg)
             
             # Update last_time for the next cycle
