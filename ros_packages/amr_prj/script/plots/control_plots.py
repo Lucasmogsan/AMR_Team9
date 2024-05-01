@@ -47,9 +47,7 @@ def plot_and_save(data, path_save, title_prefix, set_point):
     else:
         timestamps = [time.to_sec() for time in data[:, 0]]  # Convert rospy.Time to seconds
     
-    if data.ndim == 1:  # Handle one-dimensional array differently
-        data = data.reshape(-1, 1)  # Reshape to a column vector for consistency
-    
+    # Define the column indices based on the title_prefix
     if title_prefix == "Surge":
         ylabel_str = f'{title_prefix} (m)'
         plot_data = data[:, 1:4]
@@ -59,28 +57,33 @@ def plot_and_save(data, path_save, title_prefix, set_point):
     elif title_prefix == "Heave":
         ylabel_str = f'{title_prefix} (m)'
         plot_data = data[:, 7:10]
-     
+    
     # Calculate metrics
     steady_state_error, settling_time, rise_time = calculate_metrics(timestamps, plot_data[:, 1], set_point, 0.5, 0)
     
-    # Measured vs True plot
+    # Calculate errors
+    measured_error = plot_data[:, 0] #- set_point
+    gt_error = plot_data[:, 1] # - set_point
+    
+    # Plotting measured and ground truth data vs. errors
     plt.figure(figsize=(10, 5))
-    plt.plot(timestamps, plot_data[:, 0], label=f'{title_prefix}', color='blue')
-    if plot_data.shape[1] >= 3:  # Ensure there's at least three columns for GT data
-        plt.plot(timestamps, plot_data[:, 1], label=f'{title_prefix} GT', color='green')
+    plt.plot(timestamps, measured_error, label=f'{title_prefix} Measured Error', color='blue')
+    plt.plot(timestamps, gt_error, label=f'{title_prefix} GT Error', color='green')
     plt.axhline(y=set_point, color='red', linestyle='-', label='Set Point')
-    if settling_time is not None and rise_time is not None:
-        settling_time_offset = settling_time - 20.47
+
+    # Annotations for settling time and rise time
+    if settling_time is not None and rise_time is not None and False:
         plt.axvline(x=settling_time, color='purple', linestyle='--', label='Settling Time')
-        plt.title(f'{title_prefix} Over Time\nSSE: {steady_state_error:.3f}, Settling Time: {settling_time_offset:.3f}s, Rise Time: {rise_time:.3f}s')
+        plt.title(f'{title_prefix} Over Time\nSSE: {steady_state_error:.3f}, Settling Time: {settling_time:.3f}s, Rise Time: {rise_time:.3f}s')
     plt.xlabel('Time (seconds)')
-    plt.ylabel(ylabel_str)
+    plt.ylabel(f'{title_prefix} {ylabel_str.split()[1]}')
     plt.legend()
     plt.grid(True)
-    plt.savefig(f"{path_save}{title_prefix.lower()}_over_time.png")
+    plt.xlim(18,70)
+    plt.savefig(f"{path_save}{title_prefix.lower()}_error_over_time.png")
     plt.close()
 
-    # Control input
+    # Plot control signal
     plt.figure(figsize=(10, 5))
     plt.plot(timestamps, plot_data[:, 2], label=f'{title_prefix} Control', color='magenta')
     plt.title(f'{title_prefix} Control Signal Over Time')
@@ -93,7 +96,7 @@ def plot_and_save(data, path_save, title_prefix, set_point):
 
 # Usage
 directory = '/overlay_ws/src/amr_prj/script/plots/data'
-base_filename = 'control_data_surge_tracking.npy'
+base_filename = 'control_data_ooi_tracking.npy'
 data = load_latest_data(directory, base_filename)
 path_save = '/overlay_ws/src/amr_prj/script/plots/'
 data = np.load(os.path.join(directory, base_filename), allow_pickle=True)

@@ -22,7 +22,7 @@ class TrackControlNode:
         self.last_time = 0.001
 
         timestamp = time.strftime("%Y%m%d-%H%M%S")
-        filename = f"control_data_surge_tracking.npy"
+        filename = f"control_data_ooi_tracking.npy"
         self.data_log = []
         self.base_path = "/overlay_ws/src/amr_prj/script/plots/data"
         self.data_file_path = os.path.join(self.base_path, filename)
@@ -188,8 +188,8 @@ class TrackControlNode:
 
             # TODO: Implement logic for dependent (coupled) movement
             control_msg.linear.x = -surge_control_signal
-            #control_msg.angular.z = -yaw_control_signal
-            #control_msg.linear.z =  -heave_control_signal  
+            control_msg.angular.z = -yaw_control_signal
+            control_msg.linear.z =  -heave_control_signal  
             self.velocity_publisher.publish(control_msg)
             
             # Update last_time for the next cycle
