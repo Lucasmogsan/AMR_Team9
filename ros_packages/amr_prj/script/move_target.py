@@ -13,8 +13,8 @@ def ooi_simple_move_publisher():
     rospy.init_node('simple_movement', anonymous=True)
 
     # Get parameters from ROS parameter server
-    period = rospy.get_param('~period', 10.0)
-    speed = rospy.get_param('~speed', 0.25)
+    period = rospy.get_param('~period', 20.0)
+    speed = rospy.get_param('~speed', 0)
 
     pub = rospy.Publisher('ooi/cmd_vel', Twist, queue_size=10)
 
@@ -23,7 +23,7 @@ def ooi_simple_move_publisher():
     while not rospy.is_shutdown():
 
         twist_msg = Twist()
-        twist_msg.linear.y = speed  # Initial linear velocity
+        twist_msg.linear.x = speed  # Initial linear velocity
 
         # Publish initial velocity for T/2 seconds
         start_time = rospy.Time.now()
@@ -32,7 +32,7 @@ def ooi_simple_move_publisher():
             rate.sleep()
 
         # Change linear velocity to -speed
-        twist_msg.linear.y = -speed
+        twist_msg.linear.x = -speed
 
         # Publish negative velocity for T/2 seconds
         start_time = rospy.Time.now()
@@ -47,8 +47,8 @@ def ooi_circle_move_publisher():
     rospy.init_node('circle_movement', anonymous=True)
 
     # Get parameters from ROS parameter server
-    period = rospy.get_param('~period', 6.0)
-    speed = rospy.get_param('~speed', 0.5)
+    period = rospy.get_param('~period', 20.0)
+    speed = rospy.get_param('~speed', 0.15)
     angular_speed = rospy.get_param('~angular_speed', 0.1)
 
     pub = rospy.Publisher('ooi/cmd_vel', Twist, queue_size=10)
@@ -58,7 +58,7 @@ def ooi_circle_move_publisher():
     twist_msg = Twist()
 
     while not rospy.is_shutdown():
-        twist_msg.linear.x = speed  # Constant linear velocity
+        twist_msg.linear.y = speed  # Constant linear velocity
         twist_msg.angular.z = angular_speed  # Constant angular velocity
 
         # Publish velocity
@@ -73,7 +73,7 @@ def ooi_random_move_publisher():
     rospy.init_node('random_movement', anonymous=True)
 
     # Get parameters from ROS parameter server
-    max_speed = rospy.get_param('~max_speed', 0.5)
+    max_speed = rospy.get_param('~max_speed', 0.15)
     max_angular_speed = rospy.get_param('~max_angular_speed', 0.1)
 
     pub = rospy.Publisher('ooi/cmd_vel', Twist, queue_size=10)
@@ -106,7 +106,7 @@ if __name__ == '__main__':
     try:
         # Get mode parameter from ROS parameter server
         #target_move_mode = rospy.get_param('/move_target/target_move_mode', '0')
-        target_move_mode = '0'
+        target_move_mode = '2'
         # Call the appropriate function based on the mode parameter
         if target_move_mode == '0':
             ooi_simple_move_publisher()

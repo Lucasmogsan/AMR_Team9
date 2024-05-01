@@ -5,120 +5,93 @@ from pid_regulator import PIDRegulator
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 import os
+from obstacle_detector.msg import Obstacles, CircleObstacle
 import matplotlib.pyplot as plt
 import yaml
 import numpy as np
 import time
 import tf.transformations
-
+import time
+import csv
 
 class TrackControlNode:
     def __init__(self):
         rospy.init_node('track_control_node', anonymous=True)
         self.desired_distance = 1.0
-        self.data_log = []
         self.last_control_signal = 0
         self.last_time = 0.001
 
+        timestamp = time.strftime("%Y%m%d-%H%M%S")
+        filename = f"control_data_ooi_tracking.npy"
+        self.data_log = []
+        self.base_path = "/overlay_ws/src/amr_prj/script/plots/data"
+        self.data_file_path = os.path.join(self.base_path, filename)
+
+        self.last_time = rospy.get_time()
         print('TrackControlNode: initializing node')
+        
+        self.yaw_ooi_gt = 0 # In radians
+        self.yaw_bluerov_gt = 0
         self.load_pid_configs()
-        self.pid_forward = PIDRegulator(self.pos_pid_config['position_control/pos_p'],
-                                        self.pos_pid_config['position_control/pos_i'],
-                                        self.pos_pid_config['position_control/pos_d'],
-                                        self.pos_pid_config['position_control/pos_sat'])
-        self.pid_yaw = PIDRegulator(self.pos_pid_config['position_control/rot_p'],
-                                   self.pos_pid_config['position_control/rot_i'],
-                                   self.pos_pid_config['position_control/rot_d'],
-                                   self.pos_pid_config['position_control/rot_sat'])
+        # PID controller for surge motion control
+        self.pid_surge = PIDRegulator(
+            self.pos_pid_config['position_control/surge_p'],   # Proportional gain for surge
+            self.pos_pid_config['position_control/surge_i'],   # Integral gain for surge
+            self.pos_pid_config['position_control/surge_d'],   # Derivative gain for surge
+            self.pos_pid_config['position_control/surge_sat']  # Saturation limit for surge control
+        )
 
-        self.position_subscriber_ooi = rospy.Subscriber('/ooi/pose_gt', Odometry, self.ooi_position_callback)
-        self.subscriber_bluerov2_gt = rospy.Subscriber('/bluerov2/pose_gt', Odometry, self.bluerov2_position_callback)
-        self.subscriber_bluerov2_measured_imu = rospy.Subscriber('/bluerov2/imu', Odometry, self.bluerov2_measured_callback)
+        # PID controller for yaw rotational control
+        self.pid_yaw = PIDRegulator(
+            self.pos_pid_config['position_control/yaw_p'],   # Proportional gain for yaw
+            self.pos_pid_config['position_control/yaw_i'],   # Integral gain for yaw
+            self.pos_pid_config['position_control/yaw_d'],   # Derivative gain for yaw
+            self.pos_pid_config['position_control/yaw_sat']  # Saturation limit for yaw control
+        )
 
+        # PID controller for heave motion control
+        self.pid_heave = PIDRegulator(
+            self.pos_pid_config['position_control/heave_p'],   # Proportional gain for heave
+            self.pos_pid_config['position_control/heave_i'],   # Integral gain for heave
+            self.pos_pid_config['position_control/heave_d'],   # Derivative gain for heave
+            self.pos_pid_config['position_control/heave_sat']  # Saturation limit for heave control
+        )
+
+
+        self.position_subscriber_ooi = rospy.Subscriber('/ooi/pose_gt', Odometry, self.ooi_position_callback_gt)
+        self.subscriber_bluerov2_gt = rospy.Subscriber('/bluerov2/pose_gt', Odometry, self.bluerov2_position_callback_gt)
+        self.subscriber_bluerov2_measured_imu = rospy.Subscriber('/bluerov2/imu', Odometry, self.bluerov2_position_callback_kf)
+        self.position_subscriber_ooi_kf = rospy.Subscriber('/target/kf', Obstacles, self.ooi_position_callback_kf)
+        
         self.velocity_publisher = rospy.Publisher('bluerov2/cmd_vel', Twist, queue_size=10)
         rospy.Timer(rospy.Duration(0.1), self.update_control)
 
         self.cameraFOV = 60;
         self.imageWidth = 640;
 
+    def ooi_position_callback_gt(self, msg):
+        self.current_ooi_position_gt = msg.pose.pose.position
+        self.current_ooi_orientation_gt = msg.pose.pose.orientation
 
-    def ooi_position_callback(self, msg):
-        self.current_ooi_position = msg.pose.pose.position
-
-    def bluerov2_position_callback(self, msg):
+    def bluerov2_position_callback_gt(self, msg):
         self.gt_bluerov2_position = msg.pose.pose.position
         self.gt_bluerov2_orientation = msg.pose.pose.orientation
-    
-    def bluerov2_measured_callback(self,msg):
+
+    def ooi_position_callback_kf(self, msg):
+        self.current_ooi_position_kf = msg
+        
+    def bluerov2_position_callback_kf(self,msg):
         self.bluerov2_measured_orientation = msg.orientation
+        
 
-    def log_data(self, actual_distance, surge_control_signal, yaw_error, yaw_control_signal):
-        error = self.desired_distance - actual_distance
-        # Append distance, error, surge control, yaw error, and yaw control signal to the log
-        self.data_log.append((actual_distance, error, surge_control_signal, yaw_error, yaw_control_signal))
-
-    def plot_data(self):
-        if not self.data_log:
-            rospy.logwarn("No data to plot.")
-            return
-
-        relative_distances, errors, surge_control_signals, yaw_errors, yaw_control_signals = zip(*self.data_log)
-        time_steps = range(len(self.data_log))
-
-        plt.figure(figsize=(15, 10))  # Adjust size for better fit of 2x3 layout
-
-        # Relative Distance Plot
-        plt.subplot(2, 3, 1)
-        plt.plot(time_steps, relative_distances, label='Relative Distance to OOI',color='blue')
-        plt.axhline(y=self.desired_distance, color='r', linestyle='-', label='Desired Distance')
-        plt.title('Relative Distance Over Time')
-        plt.xlabel('Time Step')
-        plt.ylabel('Distance (m)')
-        plt.legend()
-
-        # Error in Distance Plot
-        plt.subplot(2, 3, 2)
-        plt.plot(time_steps, errors, label='Error in Distance')
-        plt.title('Error Over Time')
-        plt.xlabel('Time Step')
-        plt.ylabel('Error (m)')
-        plt.legend()
-
-        # Surge Control Signal Plot
-        plt.subplot(2, 3, 3)
-        plt.plot(time_steps, surge_control_signals, label='Surge Control Signal', color='magenta')
-        plt.title('Surge Control Signal Over Time')
-        plt.xlabel('Time Step')
-        plt.ylabel('Control Signal')
-        plt.legend()
-
-        # Yaw Error Plot
-        plt.subplot(2, 3, 4)
-        plt.plot(time_steps, yaw_errors, label='Yaw Error', color='blue')
-        plt.axhline(y=0, color='r', linestyle='-', label='Desired Yaw')
-        plt.title('Yaw Error Over Time')
-        plt.xlabel('Time Step')
-        plt.ylabel('Error (rad)')
-        plt.legend()
-
-        # Yaw Control Signal Plot
-        plt.subplot(2, 3, 5)
-        plt.plot(time_steps, yaw_control_signals, label='Yaw Control Signal', color='magenta')
-        plt.title('Yaw Control Signal Over Time')
-        plt.xlabel('Time Step')
-        plt.ylabel('Control Signal')
-        plt.legend()
-
-        plt.subplot(2, 3, 6)
-        plt.axis('off') 
-
-        plt.tight_layout()
-        plt.savefig('/overlay_ws/src/amr_prj/script/plots/control_plot.png')  
-        plt.close()
-
+    def log_data(self, surge, surge_gt, surge_control, yaw, yaw_gt, yaw_control, heave, heave_gt, heave_control):
+        time_stamp = rospy.Time.now()
+        self.data_log.append((time_stamp, surge, surge_gt, surge_control, yaw, yaw_gt, yaw_control, heave, heave_gt, heave_control))
 
     def on_shutdown(self):
-        self.plot_data()
+        # Save remaining data to numpy file before shutdown
+        np.save(self.data_file_path, np.array(self.data_log))
+
 
     def get_rov_heading(self):
         # Assuming self.current_bluerov2_orientation is set to a geometry_msgs/Quaternion
@@ -142,38 +115,41 @@ class TrackControlNode:
         else:
             rospy.logerr('Position PID config file not found')
 
-    def calculate_actual_distance(self): 
-        # Extract coordinates from ROS Pose messages 
-        ooi_x = self.current_ooi_position.x
-        ooi_y = self.current_ooi_position.y
-        ooi_z = self.current_ooi_position.z
-        rov_x = self.current_bluerov2_position.x
-        rov_y = self.current_bluerov2_position.y
-        rov_z = self.current_bluerov2_position.z
-        
-        # Calculate the Euclidean distance
-        actual_distance = np.sqrt((ooi_x - rov_x)**2 + (ooi_y - rov_y)**2 + (ooi_z - rov_z)**2)
-        return actual_distance
-
     def calculate_yaw_error(self):
-        # Obtain the position differences
-        dy = self.current_ooi_position.y - self.current_bluerov2_position.y
-        dx = self.current_ooi_position.x - self.current_bluerov2_position.x
         
-        # Bearing to the OOI from the ROV's current position
-        heading_to_ooi = np.arctan2(dy, dx)
-
-    
-        yaw_detection = PIXEL_X_COORDINATE * (self.cameraFOV / self.imageWidth);
+        quaternion_bluerov2_gt = (
+            self.gt_bluerov2_orientation.x,
+            self.gt_bluerov2_orientation.y,
+            self.gt_bluerov2_orientation.z,
+            self.gt_bluerov2_orientation.w
+        )
+        # Convert quaternion to Euler angles (roll, pitch, yaw)
+        euler = tf.transformations.euler_from_quaternion(quaternion_bluerov2_gt)
+        # euler is a tuple (roll, pitch, yaw), yaw is what we need
+        self.yaw_bluerov_gt = euler[2]  # In radians
         
-        # Get the ROV's current heading (yaw) from quaternion
-        yaw_current = self.get_rov_heading()
+        quaternion_ooi_gt = (
+            self.current_ooi_orientation_gt.x,
+            self.current_ooi_orientation_gt.y,
+            self.current_ooi_orientation_gt.z,
+            self.current_ooi_orientation_gt.w
+        )
+        # Convert quaternion to Euler angles (roll, pitch, yaw)
+        euler = tf.transformations.euler_from_quaternion(quaternion_ooi_gt)
+        # euler is a tuple (roll, pitch, yaw), yaw is what we need
+        self.yaw_ooi_gt = euler[2]  # In radians
 
-        # Calculate yaw error
-        yaw_error = (yaw_detection - yaw-current + np.pi) % (2 * np.pi) - np.pi
+        dy = self.current_ooi_position_gt.y
+        dx = self.current_ooi_position_gt.x
+        self.yaw_ooi_gt = np.arctan2(dy, dx)
 
-        return yaw_error
-
+        
+        
+        # Kalman filter
+        dy = self.current_ooi_position_kf.circles[0].center.y 
+        dx = self.current_ooi_position_kf.circles[0].center.x
+        yaw_kf = np.arctan2(dy, dx)
+        return yaw_kf
 
     def update_control(self, event):
         current_time = rospy.get_time()  
@@ -182,27 +158,38 @@ class TrackControlNode:
         if dt < 1e-4: # Non zero division
             return
         
-        if hasattr(self, 'current_ooi_position') and hasattr(self, 'current_bluerov2_position'):
+        
 
+        if hasattr(self, 'current_ooi_position_kf'):
             # Surge control
-            actual_distance = self.calculate_actual_distance()
+            surge_error = self.current_ooi_position_kf.circles[0].center.x # Relative frame | For global frame: -self.current_bluerov2_position.x
             setpoint = self.desired_distance
-            surge_control_signal = self.pid_forward.update(setpoint, actual_distance, dt)
+            surge_control_signal = self.pid_surge.update(setpoint, surge_error, dt)
 
-             # Yaw control
+            # Yaw control
             yaw_error = self.calculate_yaw_error()
             yaw_control_signal = self.pid_yaw.update(0, yaw_error, dt)  # Setpoint is 0 for yaw, we want no yaw error
 
-
-            # Log the data
-            self.log_data(actual_distance, surge_control_signal, yaw_error, yaw_control_signal)
+            # Heave Control
+            heave_error = self.current_ooi_position_kf.circles[0].center.z-0.022020-0.007058
+            heave_control_signal = self.pid_heave.update(0, heave_error, dt)  # Setpoint is 0 for yaw, we want no yaw error
+            
+            # Log the data | [surge, ]
+            surge_gt = (self.current_ooi_position_gt.x-self.gt_bluerov2_position.x-0.27)
+            yaw_gt = self.yaw_ooi_gt - self.yaw_bluerov_gt 
+            heave_gt = (self.current_ooi_position_gt.z-self.gt_bluerov2_position.z -0.022020-0.007058+0.008)
+            print(f"{surge_error:1f}, {surge_gt:1f},{surge_control_signal:1f}")
+            self.log_data(surge_error, surge_gt, surge_control_signal,
+                          yaw_error, yaw_gt, yaw_control_signal,
+                          heave_error, heave_gt, heave_control_signal)
             
             # Create and publish the control message
             control_msg = Twist() # TODO: Understand why control signals are flipped
 
             # TODO: Implement logic for dependent (coupled) movement
-            #control_msg.linear.x = -surge_control_signal
-            control_msg.angular.z = -yaw_control_signal  
+            control_msg.linear.x = -surge_control_signal
+            control_msg.angular.z = -yaw_control_signal
+            control_msg.linear.z =  -heave_control_signal  
             self.velocity_publisher.publish(control_msg)
             
             # Update last_time for the next cycle

@@ -119,8 +119,8 @@ source devel/setup.bash
 
 Launch the main (world, robot, ooi etc)
 ```bash
-roslaunch amr_prj run.launch
-roslaunch perception.launch
+roslaunch amr_prj run.launch gui:=false
+roslaunch amr_prj perception.launch
 ```
 
 Use teleop to control (if desired)
