@@ -22,7 +22,7 @@ class TrackControlNode:
         self.last_time = 0.001
 
         timestamp = time.strftime("%Y%m%d-%H%M%S")
-        filename = f"control_data_{timestamp}.npy"
+        filename = f"control_data_surge_tracking.npy"
         self.data_log = []
         self.base_path = "/overlay_ws/src/amr_prj/script/plots/data"
         self.data_file_path = os.path.join(self.base_path, filename)
@@ -175,10 +175,10 @@ class TrackControlNode:
             heave_control_signal = self.pid_heave.update(0, heave_error, dt)  # Setpoint is 0 for yaw, we want no yaw error
             
             # Log the data | [surge, ]
-            surge_gt = (self.current_ooi_position_gt.x-self.gt_bluerov2_position.x)
+            surge_gt = (self.current_ooi_position_gt.x-self.gt_bluerov2_position.x-0.27)
             yaw_gt = self.yaw_ooi_gt - self.yaw_bluerov_gt 
-            heave_gt = (self.current_ooi_position_gt.z-self.gt_bluerov2_position.z -0.022020-0.007058)
-            print(f"{yaw_error:1f}, {yaw_gt:1f}")
+            heave_gt = (self.current_ooi_position_gt.z-self.gt_bluerov2_position.z -0.022020-0.007058+0.008)
+            print(f"{surge_error:1f}, {surge_gt:1f},{surge_control_signal:1f}")
             self.log_data(surge_error, surge_gt, surge_control_signal,
                           yaw_error, yaw_gt, yaw_control_signal,
                           heave_error, heave_gt, heave_control_signal)
@@ -187,9 +187,9 @@ class TrackControlNode:
             control_msg = Twist() # TODO: Understand why control signals are flipped
 
             # TODO: Implement logic for dependent (coupled) movement
-            #control_msg.linear.x = -surge_control_signal
-            control_msg.angular.z = -yaw_control_signal
-            control_msg.linear.z =  -heave_control_signal  
+            control_msg.linear.x = -surge_control_signal
+            #control_msg.angular.z = -yaw_control_signal
+            #control_msg.linear.z =  -heave_control_signal  
             self.velocity_publisher.publish(control_msg)
             
             # Update last_time for the next cycle
