@@ -152,6 +152,7 @@ def main():
             # Add header
             obstacle_msg.header = Header()
             obstacle_msg.header.stamp = rospy.Time.now()
+            obstacle_msg.header.frame_id = "camera_front_link_optical"
 
             # Populate the velocity
             circle.velocity = Vector3()

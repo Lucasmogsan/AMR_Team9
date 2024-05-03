@@ -1,14 +1,18 @@
 # Sensor-based underwater tracking of marine object
 Final project for course 34763 Autonomous Marine Robotics
 
-# Development
+# General overview:
+- [Project overview poster](assets/AMRposter.pdf)
+- Demo shown on [this YouTube link](https://youtu.be/P3YY75kkVYM?si=AWXZJ3MmgK3vxTL5)
 
-# Notes:
 
-- Object 
-- Object detected by camera
-- Sonar used to defin distance
-- 
+# How to run:
+
+```bash
+roslaunch amr_prj run.launch
+roslaunch amr_prj perception.launch
+rosrun amr_prj track_control.py
+```
 
 ## Git (Downloading and contributing)
 

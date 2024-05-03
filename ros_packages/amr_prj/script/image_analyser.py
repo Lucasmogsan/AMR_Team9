@@ -119,7 +119,8 @@ class ImageAnalyser:
                 self.circle_msg.center.z = -cam_coord[1]
                 self.circle_msg.true_radius = r
                 
-                self.obstacle_msg.header.stamp = rospy.Time.now()              
+                self.obstacle_msg.header.stamp = rospy.Time.now()
+                self.obstacle_msg.header.frame_id = "camera_front_link_optical"              
                 self.obstacle_msg.circles.append(self.circle_msg)   # Add the CircleObstacle to the Obstacle message
 
                 self.pub2.publish(self.obstacle_msg)  # Publish circle's data
@@ -137,7 +138,7 @@ class ImageAnalyser:
             return
 
         img_msg.header.stamp = rospy.Time.now()
-        img_msg.header.frame_id = "camera_front_link_optical"
+        img_msg.header.frame_id = "world"
 
         # Publish the processed image
         self.pub1.publish(img_msg)
